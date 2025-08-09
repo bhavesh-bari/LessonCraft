@@ -6,7 +6,7 @@ function Navbar() {
     const isLoggedIn = true;
 
     return (
-        <nav className="w-full bg-blue-200 shadow-md p-2 md:p-3 flex items-center justify-between border-b-2 border-gray-800 sticky top-0 z-50">
+        <nav className="w-full bg-blue-300 shadow-md p-2 md:p-3 flex items-center justify-between border-b-2 border-gray-800 sticky top-0 z-50">
             <Link href="/" className="flex items-center gap-2">
                 <Image
                     src="/LessonCraftLogo.png"

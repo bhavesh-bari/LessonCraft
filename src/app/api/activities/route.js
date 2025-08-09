@@ -8,11 +8,9 @@ export async function POST(req) {
     const { subject, topic, activityType } = await req.json();
     const prompt = classActivityPrompt(topic, subject, activityType);
     let generatedText = await generateContent(prompt);
-
-    // 3. Clean and parse the JSON response
-    // The AI might wrap the JSON in markdown, so we clean it up.
     generatedText = generatedText.replace(/```json/g, '').replace(/```/g, '').trim();
     const activities = JSON.parse(generatedText);
+    
     return new Response(JSON.stringify({ activities }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

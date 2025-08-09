@@ -18,7 +18,7 @@ const currentUser = {
 };
 
 export default function HomePage() {
-  const user = null;
+  const user = currentUser;
 
   if (!user) {
     return (

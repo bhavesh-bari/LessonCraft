@@ -5,12 +5,23 @@ const config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  // red, purple, yellow, green
+  safelist: [
+    "border-red-500",
+    "border-green-500",
+    "border-yellow-500",
+    "border-purple-500",
+    "bg-red-100",
+    "bg-green-100",
+    "bg-yellow-100",
+    "bg-purple-100"
+  ],
   theme: {
     extend: {
-      // Your custom theme settings can go here
+      
     },
   },
-  // --- THIS IS THE CRUCIAL PART ---
+
   plugins: [
     require('@tailwindcss/typography'), // <-- Add this line
   ],
