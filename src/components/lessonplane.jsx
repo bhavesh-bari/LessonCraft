@@ -1,5 +1,4 @@
-
-"use client"; // This component uses state and event handlers.
+"use client";
 
 import React, { useState } from 'react';
 import {
@@ -13,114 +12,129 @@ import {
     LayoutList,
     CheckCircle2,
     XCircle,
+    Clock,
+    BookOpenCheck,
+    Presentation,
+    BookText,
+    BotMessageSquare,
+    PencilRuler,
+    FileText,
+    UsersRound,
+    ListChecks
 } from 'lucide-react';
 
-// --- Mock Data for Demonstration ---
-const mockLessonPlan = {
-    introduction: "Begin with a 5-minute interactive discussion asking students what they know about the water cycle. Use a visual aid like a simple diagram or a short video to capture their interest and introduce the key terms: evaporation, condensation, and precipitation.",
-    objectives: [
-        "Students will be able to define evaporation, condensation, and precipitation.",
-        "Students will be able to draw a diagram of the water cycle and label its key stages.",
-        "Students will be able to explain the importance of the water cycle for life on Earth."
-    ],
-    materials: [
-        "Whiteboard or smartboard",
-        "Markers or pens",
-        "Projector for video",
-        "Worksheet with a blank water cycle diagram",
-        "Art supplies (crayons, colored pencils)"
-    ],
-    activities: [
-        {
-            title: "Interactive Diagramming (15 mins)",
-            description: "As a class, collectively draw the water cycle on the whiteboard. Have students come up to the board to draw different parts (sun, clouds, ocean, rain)."
-        },
-        {
-            title: "Worksheet Activity (10 mins)",
-            description: "Students will individually label the parts of the water cycle on their provided worksheets."
-        }
-    ],
-    assessment: "Review the completed worksheets to check for understanding. Ask 3-4 wrap-up questions to the class, such as 'What happens to water after it evaporates?'",
-    conclusion: "Summarize the key stages of the water cycle. Briefly touch upon its real-world importance, like how it provides fresh water for drinking and farming. Assign a simple homework task to observe a real-world example of the water cycle (e.g., a puddle drying up)."
-};
 
-// --- Main Component ---
 export default function LessonPlanGeneratorPage() {
-    // --- State Management ---
     const [subject, setSubject] = useState('');
-    const [topic, setTopic] = useState(''); // Corrected from useState to useState
+    const [topic, setTopic] = useState('');
     const [level, setLevel] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [lessonPlan, setLessonPlan] = useState(null);
 
-    // --- Event Handler ---
-    const handleGeneratePlan = (e) => {
+    const handleGeneratePlan = async (e) => {
         e.preventDefault();
-        if (!subject || !topic || !grade) {
-            alert("Please fill in Subject, Topic, and Grade.");
+        if (!subject || !topic || !level) {
+            alert("Please fill in Subject, Topic, and Level.");
             return;
         }
         setIsLoading(true);
         setLessonPlan(null);
-
-        // Simulate API call
-        setTimeout(() => {
-            setLessonPlan(mockLessonPlan);
+        try {
+            const response = await fetch('/api/lesson-plan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ subject, topic, level }),
+            });
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            // Ensure we set to null if the response is not what we expect
+            setLessonPlan(data.lessonPlan || null);
+        } catch (error) {
+            console.error("Failed to fetch lesson plan:", error);
+            alert("Failed to generate lesson plan. Please try again.");
+        } finally {
             setIsLoading(false);
-        }, 3000);
+        }
     };
+    const handleDownload = async () => {
+        try {
+            const res = await fetch('/api/pdf/generate-lessonplan-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lessonPlan }),
+            });
+            if (!res.ok) throw new Error('PDF generation failed');
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${lessonPlan.lessonTitle.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to download PDF');
+        }
+    }
+    const InfoCard = ({ icon, title, value }) => (
+        <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-lg">
+            {icon}
+            <p><span className="font-semibold">{title}:</span> {value}</p>
+        </div>
+    );
+
+    const Section = ({ icon, title, children }) => (
+        <div>
+            <h3 className="flex items-center gap-3 text-xl font-bold text-gray-800 mb-3">
+                {icon} {title}
+            </h3>
+            <div className="pl-10 text-gray-700">{children}</div>
+        </div>
+    );
 
     return (
         <main className="min-h-screen bg-blue-200 p-4 sm:p-6 lg:p-8 font-sans">
             <div className="max-w-5xl mx-auto">
-
-                {/* --- Header --- */}
+                {/* Header */}
                 <header className="flex items-center gap-4 mb-8">
-                    <NotebookPen className="w-12 h-12 text-yellow-600" />
+                    <BookOpenCheck className="w-12 h-12 text-yellow-600" />
                     <div>
                         <h1 className="text-3xl lg:text-4xl font-bold text-gray-800">Lesson Plan Generator</h1>
                         <p className="text-lg text-gray-500">Design structured and effective lesson plans with AI.</p>
                     </div>
                 </header>
 
-                {/* --- Input Form Section --- */}
+                {/* Form */}
                 <div className="bg-white p-8 rounded-2xl shadow-lg mb-12">
-                    <form onSubmit={handleGeneratePlan} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                        {/* Subject */}
+                    <form onSubmit={handleGeneratePlan} className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
                         <div>
                             <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                             <div className="relative">
-                                <Book className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400 " />
-                                <input id="subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., General Science" className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-400" />
+                                <Book className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                                <input id="subject" type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g., General Science" className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-800" />
                             </div>
                         </div>
-
-                        {/* Topic */}
                         <div>
                             <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">Topic</label>
                             <div className="relative">
-                                <NotebookPen className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400 " />
-                                <input id="topic" type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g., The Water Cycle" className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-400" />
+                                <NotebookPen className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                                <input id="topic" type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g., The Water Cycle" className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-800" />
                             </div>
                         </div>
-
-                        {/* /Level */}
                         <div>
                             <label htmlFor="Level" className="block text-sm font-medium text-gray-700 mb-1">Level</label>
                             <div className="relative">
-                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5  text-yellow-400" />
-                                <select id="Level" value={level} onChange={(e) => setLevel(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-400">
+                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-yellow-400" />
+                                <select id="Level" value={level} onChange={(e) => setLevel(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 text-gray-800">
                                     <option value="">Select Level</option>
                                     <option value="Beginner">Beginner</option>
                                     <option value="Intermediate">Intermediate</option>
                                     <option value="Advanced">Advanced</option>
-                                    <option value="Expert">Expert</option>
                                 </select>
                             </div>
                         </div>
-
-                        {/* Generate Button */}
                         <div className="md:col-span-2">
                             <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center gap-3 bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg text-lg hover:bg-yellow-700 active:scale-95 transition-all shadow-md disabled:bg-yellow-300">
                                 {isLoading ? <Loader2 className="animate-spin" /> : <Wand2 />}
@@ -130,7 +144,7 @@ export default function LessonPlanGeneratorPage() {
                     </form>
                 </div>
 
-                {/* --- Loading State --- */}
+                {/* Loading State */}
                 {isLoading && (
                     <div className="text-center py-12">
                         <Loader2 className="w-16 h-16 text-yellow-600 animate-spin mx-auto" />
@@ -138,58 +152,175 @@ export default function LessonPlanGeneratorPage() {
                     </div>
                 )}
 
-                {/* --- Lesson Plan Preview --- */}
+                {/* Lesson Plan Display */}
                 {lessonPlan && (
-                    <div className="bg-white p-8 rounded-2xl shadow-lg">
+                    <div className="bg-white p-8 rounded-2xl shadow-lg animate-fade-in">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-4 mb-6">
-                            <h2 className="text-2xl font-bold text-gray-800">Your Lesson Plan: {topic}</h2>
-                            <button onClick={() => alert('Downloading PDF...')} className="mt-4 sm:mt-0 flex items-center gap-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
+                            <h2 className="text-3xl font-bold text-gray-800">{lessonPlan.lessonTitle}</h2>
+                            <button onClick={handleDownload} className="mt-4 sm:mt-0 flex items-center gap-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors">
                                 <Download size={18} /> Download as PDF
                             </button>
                         </div>
 
-                        <div className="space-y-6">
-                            {/* Introduction */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><LayoutList className="text-yellow-500" /> Introduction</h3>
-                                <p className="text-gray-600 pl-8">{lessonPlan.introduction}</p>
-                            </div>
-                            {/* Objectives */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><CheckCircle2 className="text-green-500" /> Objectives</h3>
-                                <ul className="list-disc list-inside pl-8 space-y-1 text-gray-600">
-                                    {lessonPlan.objectives.map((obj, i) => <li key={i}>{obj}</li>)}
+                        {/* Basic Info Cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 text-gray-600">
+                            <InfoCard icon={<Book size={20} className="text-blue-500" />} title="Subject" value={lessonPlan.subject} />
+                            <InfoCard icon={<NotebookPen size={20} className="text-blue-500" />} title="Topic" value={lessonPlan.topic} />
+                            <InfoCard icon={<Users size={20} className="text-blue-500" />} title="Level" value={lessonPlan.targetStudentLevel} />
+                            <InfoCard icon={<Clock size={20} className="text-blue-500" />} title="Hours" value={`${lessonPlan.estimatedTotalHours} hr`} />
+                            <InfoCard icon={<LayoutList size={20} className="text-blue-500" />} title="Lectures" value={lessonPlan.estimatedNumLectures} />
+                        </div>
+
+                        <div className="space-y-8">
+                            <Section icon={<CheckCircle2 className="text-green-500" />} title="Learning Objectives">
+                                <ul className="list-disc list-outside space-y-2">
+                                    {lessonPlan.learningObjectives?.map((obj, i) => <li key={i}>{obj}</li>)}
                                 </ul>
-                            </div>
-                            {/* Materials */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><ClipboardList className="text-yellow-500" /> Materials</h3>
-                                <ul className="list-disc list-inside pl-8 space-y-1 text-gray-600">
-                                    {lessonPlan.materials.map((mat, i) => <li key={i}>{mat}</li>)}
+                            </Section>
+
+                            <Section icon={<Users className="text-indigo-500" />} title="Prerequisites">
+                                <ul className="list-disc list-outside space-y-2">
+                                    {lessonPlan.prerequisites?.map((req, i) => <li key={i}>{req}</li>)}
                                 </ul>
-                            </div>
-                            {/* Activities */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><Wand2 className="text-purple-500" /> Activities</h3>
-                                <div className="pl-8 space-y-3">
-                                    {lessonPlan.activities.map((act, i) => (
-                                        <div key={i}>
-                                            <p className="font-semibold text-gray-700">{act.title}</p>
-                                            <p className="text-gray-600">{act.description}</p>
+                            </Section>
+
+                            <Section icon={<ClipboardList className="text-yellow-500" />} title="Materials Needed">
+                                <ul className="list-disc list-outside space-y-2">
+                                    {lessonPlan.materialsNeeded?.map((mat, i) => <li key={i}>{mat}</li>)}
+                                </ul>
+                            </Section>
+                            <Section icon={<Presentation className="text-purple-400" />} title="Teaching Strategies">
+                                <ul className="list-disc list-outside space-y-2">
+                                    {lessonPlan.teachingStrategies?.map((mat, i) => <li key={i}>{mat}</li>)}
+                                </ul>
+                            </Section>
+                            <Section icon={<LayoutList className="text-teal-500" />} title="Lesson Outline">
+                                {lessonPlan.lessonOutline?.map((item, i) => (
+                                    <div key={i} className="mb-4 p-4 border-l-4 border-teal-200 bg-teal-50/50 rounded-r-lg">
+                                        <p className="font-bold text-teal-800">{item.section} ({item.time})</p>
+                                        <p className="mt-1"><span className="font-semibold">Teacher:</span> {item.teacherActions}</p>
+                                        <p className="mt-1"><span className="font-semibold">Students:</span> {item.studentActions}</p>
+                                    </div>
+                                ))}
+                            </Section>
+                            <Section icon={<BookText className="text-pink-500" />} title="Lecture Wise Plan">
+                                <div className="space-y-6">
+                                    {lessonPlan.stepByStepPlan?.map((lectureItem, index) => (
+                                        <div key={index} className="space-y-3">
+                                            <div>
+                                                <p className="font-semibold text-pink-400">{lectureItem.lecture}</p>
+                                                <p>{lectureItem.description}</p>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-pink-400">Slots</p>
+                                                <ul className="list-disc list-outside pl-5 space-y-1">
+                                                    {lectureItem.slots.map((slot, slotIndex) => (
+                                                        <li key={slotIndex}>
+                                                            <strong>Slot {slot.slot} ({slot.timing}):</strong> {slot.description}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
-                            {/* Assessment */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><NotebookPen className="text-blue-500" /> Assessment</h3>
-                                <p className="text-gray-600 pl-8">{lessonPlan.assessment}</p>
-                            </div>
-                            {/* Conclusion */}
-                            <div>
-                                <h3 className="flex items-center gap-2 text-xl font-semibold text-gray-700 mb-2"><XCircle className="text-red-500" /> Conclusion</h3>
-                                <p className="text-gray-600 pl-8">{lessonPlan.conclusion}</p>
-                            </div>
+                            </Section>
+
+                            <Section icon={<Wand2 className="text-purple-500" />} title="Activities & Practice">
+                                <div className="space-y-4">
+                                    {lessonPlan.activities?.map((act, i) => (
+                                        <div key={i}>
+                                            <p className="font-semibold text-purple-800">{act.title}</p>
+                                            <p>{act.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Section>
+
+                            <Section icon={<NotebookPen className="text-blue-500" />} title="Assessment">
+                                <div className="space-y-3">
+                                    <div>
+                                        <p className="font-semibold text-blue-800">Formative (During Class)</p>
+                                        <p>{lessonPlan.assessmentMethods?.formative}</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-blue-800">Summative (After Class)</p>
+                                        <p>{lessonPlan.assessmentMethods?.summative}</p>
+                                    </div>
+                                </div>
+                            </Section>
+
+                            <Section icon={<Book className="text-orange-500" />} title="Homework / Follow-Up">
+                                <ul className="list-disc list-outside space-y-2">
+                                    {lessonPlan.homework?.map((task, i) => <li key={i}>{task}</li>)}
+                                </ul>
+                            </Section>
+
+
+                            <Section icon={<XCircle className="text-red-500" />} title="Recap & Reflection">
+                                <div className="space-y-3">
+                                    <div>
+                                        <p className="font-semibold text-red-800">Summary of Key Points</p>
+                                        <p>{lessonPlan.recapAndReflection?.summary}</p>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-red-800">Reflection Questions</p>
+                                        <ul className="list-disc list-outside pl-5 space-y-1">
+                                            {lessonPlan.recapAndReflection?.reflectionQuestions?.map((q, i) => <li key={i}>{q}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </Section>
+                            <Section icon={<ListChecks className="text-indigo-500" />} title="References">
+                                <ul className="space-y-4">
+                                    {[
+                                        {
+                                            icon: <UsersRound className="w-6 h-6 text-pink-600 flex-shrink-0" />,
+                                            label: "Interactive Class Activity",
+                                            href: "https://lessoncraft-ai/tools/activities.com",
+                                        },
+                                        {
+                                            icon: <PencilRuler className="w-6 h-6 text-green-600 flex-shrink-0" />,
+                                            label: "Quiz Maker Challenge",
+                                            href: "https://lessoncraft-ai/tools/quiz-maker.com",
+                                        },
+                                        {
+                                            icon: <FileText className="w-6 h-6 text-red-600 flex-shrink-0" />,
+                                            label: "Surprise Test",
+                                            href: "https://lessoncraft-ai/tools/exam-generator.com",
+                                        },
+                                        {
+                                            icon: <BotMessageSquare className="w-6 h-6 text-purple-600 flex-shrink-0" />,
+                                            label: "Doubt Solving",
+                                            href: "https://lessoncraft-ai/tools/summarizer.com",
+                                        },
+                                        {
+                                            icon: <BookText className="w-6 h-6 text-blue-600 flex-shrink-0" />,
+                                            label: "Notes & PPT",
+                                            href: "https://lessoncraft-ai/tools/notes-generator.com",
+                                        },
+                                    ].map((ref, idx) => (
+                                        <li
+                                            key={idx}
+                                            className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 bg-white p-3 rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                {ref.icon}
+                                                <strong className="text-gray-800">{ref.label}:</strong>
+                                            </div>
+                                            <a
+                                                href={ref.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 underline break-all text-sm sm:text-base"
+                                            >
+                                                {ref.href}
+                                            </a>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </Section>
+
                         </div>
                     </div>
                 )}

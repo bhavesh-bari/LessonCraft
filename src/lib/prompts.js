@@ -143,56 +143,123 @@ You must follow exactly this structure for each question:${questionStructure}
 `;
 };
 export const lessonPlanPrompt = (topic, subject, level) => `
-  You are an expert educator and instructional designer.
-  Create a **detailed, structured lesson plan** for teaching the topic "${topic}" in the subject "${subject}".
-  
-  **Student Level**: ${level} (Beginner / Intermediate / Advanced)
+  You are an expert educator and instructional designer creating a detailed, structured lesson plan.
 
-  **Additional Requirement**:
-  - Estimate the **total time required** to teach this topic in hours.
-  - Suggest the **number of lectures/sessions** needed (assume each lecture is around 1 hour unless specified otherwise).
+  ## Specifications
+  - Subject: ${subject}
+  - Topic: ${topic}
+  - Student Level: ${level}
 
-  **Lesson Plan Requirements**:
-  1. **Title & Basic Info**
-     - Lesson Title
-     - Subject
-     - Topic
-     - Estimated Total Hours Required
-     - Estimated Number of Lectures
-     - Target Student Level
-  2. **Learning Objectives**
-     - 3–6 clear, measurable learning outcomes.
-  3. **Prerequisites**
-     - List prior knowledge or skills students should have.
-  4. **Materials Needed**
-     - Bullet list of resources, tools, or equipment needed.
-  5. **Lesson Outline**
-     - Break down the session into time-bound sections (Introduction, Explanation, Practice, Recap).
-     - For each section, include: purpose, teacher actions, and student actions.
-  6. **Teaching Strategies**
-     - Describe teaching methods (lecture, demonstration, discussion, group work, hands-on practice).
-  7. **Step-by-Step Teaching Plan**
-     - Detailed sequence of teaching steps with timings.
-     - Include examples, analogies, or diagrams where applicable.
-  8. **Activities / Practice**
-     - 1–3 interactive exercises or activities.
-  9. **Assessment**
-     - How understanding will be checked during and after class.
-  10. **Homework / Follow-Up**
-      - At least one task to reinforce learning.
-  11. **Real-World Applications**
-      - Explain how the concept is used in real-world scenarios.
-  12. **Recap & Reflection**
-      - Summary of key points and possible student questions.
+  ## Rules
+  1. Generate a complete lesson plan with all the sections listed in the required JSON structure.
+  2. Estimate the total hours and number of lectures needed.
+  3. The content must be clear, actionable, and appropriate for the specified student level.
+  4. The final output **MUST** be a valid JSON object only — no markdown, comments, or extra text outside of the JSON structure.
 
-  **Formatting Rules**:
-  - Use Markdown headings (#, ##, ###) for structure.
-  - Use bullet points (-) and numbered lists for clarity.
-  - Use bold for important terms.
-  - Keep the tone engaging, clear, and ready to use in class.
+  ## Required JSON Output Structure
+  {
+    "lessonTitle": "A creative and descriptive title for the lesson",
+    "subject": "${subject}",
+    "topic": "${topic}",
+    "estimatedTotalHours": "e.g., 2 hours",
+    "estimatedNumLectures": "e.g., 2 lectures",
+    "targetStudentLevel": "${level}",
+    "learningObjectives": [
+      "First clear, measurable learning outcome.",
+      "Second clear, measurable learning outcome.",
+      "Third clear, measurable learning outcome."
+    ],
+    "prerequisites": [
+      "A list of prior knowledge or skills students should have."
+    ],
+    "materialsNeeded": [
+      "A bulleted list of all resources, tools, or equipment needed."
+    ],
+    "lessonOutline": [
+      {
+        "section": "Introduction",
+        "time": "e.g., 10 minutes",
+        "purpose": "Brief purpose of this section.",
+        "teacherActions": "What the teacher does during this section.",
+        "studentActions": "What the students are expected to do."
+      },
+      {
+        "section": "Core Explanation",
+        "time": "e.g., 25 minutes",
+        "purpose": "Brief purpose of this section.",
+        "teacherActions": "What the teacher does during this section.",
+        "studentActions": "What the students are expected to do."
+      }
+    ],
+    "teachingStrategies": [
+      "Primary teaching method (e.g., Interactive Lecture)",
+      "Secondary method (e.g., Group Work)"
+    ],
+    {
+  "stepByStepPlan": [
+    {
+  // Each lecture should have a clear structure steps means what they teach(description) in particular timing slot(first 15 minutes, next 20 minutes etc)
+      "lecture": "Lecture 1",
+      "description": "A brief description of the lecture content.",
+      "slots": [
+        {
+          "slot": 1,
+          "timing": "e.g., 5 minutes",
+          "description": "Detailed description of the first teaching step."
+        },
+        {
+          "slot": 2,
+          "timing": "e.g., 15 minutes",
+          "description": "Detailed description of the second teaching step."
+        }
+      ]
+    },
+    {
+      "lecture": "Lecture 2",
+      "description": "A brief description of the lecture content.",
+      "slots": [
+        {
+          "slot": 1,
+          "timing": "e.g., 5 minutes",
+          "description": "Detailed description of the first teaching step."
+        },
+        {
+          "slot": 2,
+          "timing": "e.g., 15 minutes",
+          "description": "Detailed description of the second teaching step."
+        }
+      ]
+    }
+  ]
+}
 
-  **Goal**:
-  The output should be ready for a teacher to use directly, with a clear plan and realistic time estimate.
+    "activities": [
+      {
+        "title": "Name of the primary interactive activity",
+        "description": "A short description of the activity."
+      }
+    ],  
+    "assessmentMethods": {
+      "formative":"Formative assessment techniques (e.g., quizzes, discussions)",
+      "summative":"Summative assessment methods (e.g., tests, projects)"
+    }
+      
+    ,
+    "homework": [
+  "First specific follow-up task to reinforce learning.",
+  "Second optional reinforcement task."
+  //minimum 5 tasks
+],
+recapAndReflection:{
+              summary: "A summary of the key points covered in the lesson.",
+              reflectionQuestions: [
+                "First question to prompt student reflection.",
+                "Second question to prompt student reflection."
+                // add more as needed
+              ]
+}
+  }
 `;
+
 
 
