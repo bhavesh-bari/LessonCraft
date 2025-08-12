@@ -1,10 +1,12 @@
 import React from 'react'
-import NotesGeneratorPage from '@/components/Notes-generator'
+import AuthPage from '@/components/Auth'
 import Navbar from '@/components/Navbar'
 function page() {
     return (
         <div className="min-h-screen font-sans bg-blue-200">
-            <Navbar /><NotesGeneratorPage /></div>
+            <Navbar />
+            <AuthPage />
+        </div>
     )
 }
 

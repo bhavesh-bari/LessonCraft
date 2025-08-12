@@ -16,8 +16,15 @@ import {
     Users,
     X
 } from 'lucide-react';
-
+import { useSession } from "next-auth/react";
+import GuestLanding from "./GuestLanding";
 export default function ClassActivityGeneratorPage() {
+
+    const { data: session } = useSession();
+    if (!session) {
+        return <GuestLanding />;
+    }
+
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
     const [activityType, setActivityType] = useState('any');
