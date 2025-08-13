@@ -159,27 +159,27 @@ export async function POST(req) {
                 <li class="ref-item">
                     ${referenceIcons.activity}
                     <strong>Interactive Class Activity:</strong>
-                    <a href="https://lessoncraft-ai.com/tools/activities" target="_blank" class="ref-link">https://lessoncraft-ai.com/tools/activities</a>
+                    <a href="https://lesson-craft-teach.vercel.app/tools/activities" target="_blank" class="ref-link">https://lesson-craft-teach.vercel.app/tools/activities</a>
                 </li>
                 <li class="ref-item">
                     ${referenceIcons.quiz}
                     <strong>Quiz Maker Challenge:</strong>
-                    <a href="https://lessoncraft-ai.com/tools/quiz-maker" target="_blank" class="ref-link">https://lessoncraft-ai.com/tools/quiz-maker</a>
+                    <a href="https://lesson-craft-teach.vercel.app/tools/quiz-maker" target="_blank" class="ref-link">https://lesson-craft-teach.vercel.app/tools/quiz-maker</a>
                 </li>
                 <li class="ref-item">
                     ${referenceIcons.exam}
                     <strong>Surprise Test:</strong>
-                    <a href="https://lessoncraft-ai.com/tools/exam-generator" target="_blank" class="ref-link">https://lessoncraft-ai.com/tools/exam-generator</a>
+                    <a href="https://lesson-craft-teach.vercel.app/tools/exam-generator" target="_blank" class="ref-link">https://lesson-craft-teach.vercel.app/tools/exam-generator</a>
                 </li>
                 <li class="ref-item">
                     ${referenceIcons.doubt}
                     <strong>Doubt Solving:</strong>
-                    <a href="https://lessoncraft-ai.com/tools/summarizer" target="_blank" class="ref-link">https://lessoncraft-ai.com/tools/summarizer</a>
+                    <a href="https://lesson-craft-teach.vercel.app/tools/summarizer" target="_blank" class="ref-link">https://lesson-craft-teach.vercel.app/tools/summarizer</a>
                 </li>
                 <li class="ref-item">
                     ${referenceIcons.notes}
                     <strong>Notes & PPT:</strong>
-                    <a href="https://lessoncraft-ai.com/tools/notes-generator" target="_blank" class="ref-link">https://lessoncraft-ai.com/tools/notes-generator</a>
+                    <a href="https://lesson-craft-teach.vercel.app/tools/notes-generator" target="_blank" class="ref-link">https://lesson-craft-teach.vercel.app/tools/notes-generator</a>
                 </li>
             </ul>
         </div>
@@ -194,7 +194,7 @@ export async function POST(req) {
       <div style="width: 100%; font-size: 10px; padding: 0 20mm;
                   display: flex; justify-content: space-between; align-items: center;
                   height: 20px; border-top: 1px solid #e5e7eb; color: #4f46e5;">
-        <a href="https://lessoncraft-ai.com" style="color: #4f46e5; text-decoration: none;">lessoncraft-ai.com</a>
+        <a href="https://lesson-craft-teach.vercel.app" style="color: #4f46e5; text-decoration: none;">lessoncraft-ai.com</a>
         <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
       </div>
     `;
