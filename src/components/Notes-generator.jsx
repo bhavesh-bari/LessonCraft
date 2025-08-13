@@ -1,4 +1,3 @@
-// src/app/tools/notes-generator/page.js
 "use client";
 
 import React, { useState } from 'react';
@@ -11,6 +10,7 @@ export default function NotesGeneratorPage() {
     const [topic, setTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [generatedNotes, setGeneratedNotes] = useState(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const handleGenerateNotes = async (e) => {
         e.preventDefault();
@@ -24,9 +24,7 @@ export default function NotesGeneratorPage() {
         try {
             const response = await fetch('/api/notes-generator', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ subject, topic }),
             });
 
@@ -45,8 +43,44 @@ export default function NotesGeneratorPage() {
         }
     };
 
-    const handleDownloadPdf = () => {
-        alert("Downloading PDF...");
+    const handleDownloadPdf = async () => {
+        if (!generatedNotes || !topic) return;
+        setIsDownloading(true);
+
+        try {
+            const response = await fetch('/api/pdf/generate-note-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    notes: generatedNotes,
+                    topic: topic,
+                    subject: subject,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`PDF generation failed! Status: ${response.status}`);
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            const filename = `${topic.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_notes.pdf`;
+            link.href = url;
+            link.setAttribute('download', filename);
+
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode.removeChild(link);
+            window.URL.revokeObjectURL(url);
+
+        } catch (error) {
+            console.error("Failed to download PDF:", error);
+            alert("Could not download the PDF. Please try again.");
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
@@ -114,11 +148,21 @@ export default function NotesGeneratorPage() {
                                 <h2 className="text-2xl font-bold text-gray-800">Generated Notes for "{topic}"</h2>
                                 <button
                                     onClick={handleDownloadPdf}
-                                    className="flex items-center gap-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                                    disabled={isDownloading}
+                                    className="flex items-center gap-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed"
                                     title="Click to download notes as PDF"
                                 >
-                                    <Download className="w-5 h-5" />
-                                    <span>Download PDF</span>
+                                    {isDownloading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            <span>Downloading...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5" />
+                                            <span>Download PDF</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 

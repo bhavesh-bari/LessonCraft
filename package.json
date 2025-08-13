@@ -21,6 +21,7 @@
     "jspdf": "^3.0.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.536.0",
+    "marked": "^16.1.2",
     "mongoose": "^8.17.1",
     "next": "15.4.5",
     "next-auth": "^4.24.11",

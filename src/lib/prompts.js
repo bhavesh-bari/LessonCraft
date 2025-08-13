@@ -120,7 +120,7 @@ You must follow exactly this structure for each question:${questionStructure}
 ## Required JSON Output Structure
 {
   "header": {
-    "university": "TechGenAI University",
+    "university": "LessonCraft University",
     "subject": "${subject}",
     "marks": ${totalMarks},
     "duration": "${duration}"
@@ -260,6 +260,3 @@ recapAndReflection:{
 }
   }
 `;
-
-
-

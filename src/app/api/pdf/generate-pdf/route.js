@@ -57,28 +57,34 @@ export async function POST(req) {
 
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
-        <a href="https://lesson-craft-teach.vercel.app" style="color: #4f46e5; text-decoration: none;">lessoncraft-ai.com</a>
+        <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
+  lessoncraft.com
+</a>
+
         <div>
           Page <span class="pageNumber"></span> of <span class="totalPages"></span>
         </div>
       </div>
     `;
 
-    await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
+   await page.setContent(fullHtml, {
+  waitUntil: 'domcontentloaded',
+  timeout: 15000
+});
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: headerTemplate,
-      footerTemplate: footerTemplate,
-      margin: {
-        top: '70px',
-        bottom: '70px',
-        right: '25mm',
-        left: '25mm',
-      },
-    });
+const pdfBuffer = await page.pdf({
+  format: 'A4',
+  printBackground: true,
+  displayHeaderFooter: true,
+  headerTemplate: headerTemplate,
+  footerTemplate: footerTemplate,
+  margin: {
+    top: '70px',
+    bottom: '70px',
+    right: '25mm',
+    left: '25mm',
+  },
+});
 
     await browser.close();
 
