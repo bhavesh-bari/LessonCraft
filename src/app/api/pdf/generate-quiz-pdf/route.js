@@ -1,6 +1,7 @@
 // src/app/api/generate-quiz-pdf/route.js
 
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -13,8 +14,15 @@ export async function POST(req) {
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
-
-    const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath:
+        process.env.AWS_REGION || process.env.VERCEL
+          ? await chromium.executablePath()
+          : undefined,
+      headless: chromium.headless,
+    });
     const page = await browser.newPage();
 
     // --- Dynamically generate the HTML for the questions and answer key ---

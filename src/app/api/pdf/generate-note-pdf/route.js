@@ -14,11 +14,7 @@ export async function POST(req) {
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
-
-    // Convert markdown to HTML
     const bodyHtml = marked.parse(notes);
-
-    // Full HTML template
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -90,21 +86,20 @@ export async function POST(req) {
       </html>
     `;
 
-    // Launch Puppeteer using local Chrome in dev or Chromium in prod
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath:
         process.env.AWS_REGION || process.env.VERCEL
           ? await chromium.executablePath()
-          : undefined, // Locally use installed Chrome
+          : undefined,
       headless: chromium.headless,
     });
 
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
 
-    // Footer for PDF
+   
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 40px;
                   display: flex; justify-content: space-between; align-items: center;
@@ -116,7 +111,7 @@ export async function POST(req) {
       </div>
     `;
 
-    // Generate PDF
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
