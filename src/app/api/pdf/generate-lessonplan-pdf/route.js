@@ -7,8 +7,6 @@ import path from 'path';
 export async function POST(req) {
   try {
     const { lessonPlan } = await req.json();
-
-    // Read logo and convert to base64
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;

@@ -9,8 +9,6 @@ import path from 'path';
 export async function POST(req) {
   try {
     const { activity } = await req.json();
-
-    // Read the logo file and convert it to a Base64 data URI
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
@@ -25,15 +23,11 @@ export async function POST(req) {
       headless: chromium.headless,
     });
     const page = await browser.newPage();
-
-    // --- Helper function to format multi-line text into lists ---
     const formatToList = (text, listType = 'ul') => {
         if (!text) return '';
         const items = text.split('\n').map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`).join('');
         return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
     };
-    
-    // --- Full HTML Template for the PDF Body ---
 const fullHtml = `
 <html>
 <head>
@@ -113,8 +107,6 @@ const fullHtml = `
 </html>
 `;
 
-
-    // --- Header and Footer Templates ---
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
       <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
@@ -135,7 +127,7 @@ const fullHtml = `
       format: 'A4',
       printBackground: true,
       displayHeaderFooter: true,
-      headerTemplate: '<div></div>', // No header, handled in body
+      headerTemplate: '<div></div>', 
       footerTemplate: footerTemplate,
       margin: { top: '25mm', bottom: '70px', right: '25mm', left: '25mm' },
     });

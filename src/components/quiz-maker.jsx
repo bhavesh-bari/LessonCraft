@@ -234,10 +234,25 @@ export default function QuizMakerPage() {
                                 {isDownloading ? <Loader2 className="animate-spin" size={18} /> : <FileDown size={18} />}
                                 {isDownloading ? 'Downloading...' : 'Download as PDF'}
                             </button>
-                            <button className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 6H18v4.5h-4.5V6ZM6 10.5V6h4.5v4.5H6Zm7.5 7.5h4.5V13.5h-4.5V18ZM6 18v-4.5h4.5V18H6Z M13 22l-3-3h6l-3 3zM3 3l3-3h12l3 3v12l-3 3h-6v-2.5h4.5V4.5H7.5v10H5V3Z" /></svg>
+                            <button
+                                onClick={async () => {
+                                    if (!generatedQuiz) return;
+                                    const res = await fetch("/api/google/export", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ quizData: generatedQuiz, subject, topic }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.formUrl) window.open(data.formUrl, "_blank");
+                                    else alert(data.error || "Failed to export");
+                                }}
+                                className="bg-green-600 text-white px-4 py-2 rounded-lg"
+                            >
                                 Export to Google Form
                             </button>
+
+
+
                             <button onClick={handleRegenerate} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">
                                 <RefreshCw size={18} /> Regenerate Quiz
                             </button>
