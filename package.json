@@ -28,7 +28,6 @@
     "next-auth": "^4.24.11",
     "next-nprogress-bar": "^2.4.7",
     "pdf-parse": "^1.1.1",
-    "puppeteer": "^24.16.0",
     "puppeteer-core": "^24.16.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -44,6 +43,7 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.4.5",
+    "puppeteer": "^24.17.0",
     "tailwindcss": "^4"
   }
 }

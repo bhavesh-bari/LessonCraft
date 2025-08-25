@@ -12,7 +12,8 @@ export async function POST(req) {
     const cacheKey = `activities:${activity}`;
     let cached = await redisClient.get(cacheKey);
     if (cached) {
-      return new NextResponse(cached, {
+      const pdfBuffer = Buffer.from(cached, 'base64');
+      return new NextResponse(pdfBuffer, {
         status: 200,
         headers: {
           'Content-Type': 'application/pdf',
@@ -144,7 +145,7 @@ export async function POST(req) {
     });
 
     await browser.close();
-    await redisClient.setEx(cacheKey, 3600, pdfBuffer);
+    await redisClient.setEx(cacheKey, 3600, pdfBuffer.toString('base64'));
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
