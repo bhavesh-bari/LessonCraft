@@ -9,6 +9,17 @@ import path from 'path';
 export async function POST(req) {
   try {
     const { activity } = await req.json();
+    const cacheKey = `activities:${activity}`;
+    let cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return new NextResponse(cached, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${activity.title.replace(/\s+/g, '_')}_activity.pdf"`,
+        },
+      });
+    }
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
@@ -24,11 +35,11 @@ export async function POST(req) {
     });
     const page = await browser.newPage();
     const formatToList = (text, listType = 'ul') => {
-        if (!text) return '';
-        const items = text.split('\n').map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`).join('');
-        return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
+      if (!text) return '';
+      const items = text.split('\n').map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`).join('');
+      return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
     };
-const fullHtml = `
+    const fullHtml = `
 <html>
 <head>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -118,22 +129,22 @@ const fullHtml = `
       </div>
     `;
 
-     await page.setContent(fullHtml, {
-  waitUntil: 'domcontentloaded',
-  timeout: 15000
-});
+    await page.setContent(fullHtml, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000
+    });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       displayHeaderFooter: true,
-      headerTemplate: '<div></div>', 
+      headerTemplate: '<div></div>',
       footerTemplate: footerTemplate,
       margin: { top: '25mm', bottom: '70px', right: '25mm', left: '25mm' },
     });
 
     await browser.close();
-
+    await redisClient.setEx(cacheKey, 3600, pdfBuffer);
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {

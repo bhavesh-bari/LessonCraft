@@ -6,11 +6,9 @@ import redisClient from "@/lib/redis";
 export async function POST(req) {
   try {
     const { subject, topic, level } = await req.json();
-    console.log("Received lesson plan request:", { subject, topic, level });
 
-    const cacheKey = `lesson:${subject}:${topic}:${level}`;
+    const cacheKey = `lesson-plan:${subject}:${topic}:${level}`;
 
-    // 1️⃣ Try cache
     let cached = await redisClient.get(cacheKey);
     if (cached) {
       console.log("⚡ Serving from Redis cache");
@@ -19,8 +17,6 @@ export async function POST(req) {
         headers: { "Content-Type": "application/json" },
       });
     }
-
-    // 2️⃣ Generate with Gemini
     const prompt = lessonPlanPrompt(topic, subject, level);
     let generatedText = await generateContent(prompt);
 
@@ -33,10 +29,8 @@ export async function POST(req) {
 
     const responseData = JSON.stringify({ lessonPlan });
 
-    // 3️⃣ Save in Redis (with TTL 1h)
     await redisClient.setEx(cacheKey, 3600, responseData);
 
-    // 4️⃣ Return fresh
     return new Response(responseData, {
       status: 200,
       headers: { "Content-Type": "application/json" },

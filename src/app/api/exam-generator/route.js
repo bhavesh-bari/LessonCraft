@@ -6,10 +6,20 @@ import { examPaperPrompt } from "@/lib/prompts";
 export async function POST(req) {
   try {
     const { subject, syllabus, totalMarks, duration, questions } = await req.json();
+    const cacheKey = `exam-generator:${subject}:${syllabus}:${totalMarks}:${duration}:${questions}`;
+    let cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return new Response(cached, {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const prompt = examPaperPrompt(subject, syllabus, totalMarks, duration, questions);
     let generatedText = await generateContent(prompt);
     generatedText = generatedText.replace(/```json/g, '').replace(/```/g, '').trim();
     const paper = JSON.parse(generatedText);
+    redisClient.setEx(cacheKey, 3600, JSON.stringify({ paper }));
     return new Response(JSON.stringify({ paper }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },

@@ -9,7 +9,6 @@ import path from 'path';
 export async function POST(req) {
   try {
     const { notes, topic, subject } = await req.json();
-
     // Load logo as Base64
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
@@ -99,7 +98,7 @@ export async function POST(req) {
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
 
-   
+
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 40px;
                   display: flex; justify-content: space-between; align-items: center;

@@ -2,12 +2,23 @@
 
 import { generateContent } from "@/lib/gemini";
 import { notesGeneratorPrompt } from "@/lib/prompts";
+import redisClient from "@/lib/redis";
 
 export async function POST(req) {
   try {
     const { subject, topic } = await req.json();
+    const cacheKey = `notes-generator:${subject}:${topic}`;
+    let cached = await redisClient.get(cacheKey);
+    if (cached) {
+      return new Response(cached, {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const prompt = notesGeneratorPrompt(subject, topic);
     const notesText = await generateContent(prompt);
+    redisClient.setEx(cacheKey, 3600, JSON.stringify({ notes: notesText }));
     return new Response(JSON.stringify({ notes: notesText }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
