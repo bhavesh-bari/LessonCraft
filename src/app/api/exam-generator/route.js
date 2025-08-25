@@ -2,7 +2,7 @@
 
 import { generateContent } from "@/lib/gemini";
 import { examPaperPrompt } from "@/lib/prompts";
-
+import redisClient from '@/lib/redis';
 export async function POST(req) {
   try {
     const { subject, syllabus, totalMarks, duration, questions } = await req.json();

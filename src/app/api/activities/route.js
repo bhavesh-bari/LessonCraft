@@ -2,7 +2,7 @@
 
 import { generateContent } from "@/lib/gemini";
 import { classActivityPrompt } from "@/lib/prompts";
-
+import redisClient from '@/lib/redis';
 export async function POST(req) {
   try {
     const { subject, topic, activityType } = await req.json();

@@ -5,7 +5,7 @@ import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-
+import redisClient from '@/lib/redis';
 export async function POST(req) {
   try {
     const { activity } = await req.json();

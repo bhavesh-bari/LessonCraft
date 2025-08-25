@@ -2,7 +2,7 @@
 
 import { generateContent } from "@/lib/gemini";
 import { quizMakerPrompt } from "@/lib/prompts";
-
+import redisClient from '@/lib/redis';
 export async function POST(req) {
   try {
     const { subject, topic, numQuestions, questionType, difficulty } = await req.json();
