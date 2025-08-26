@@ -6,41 +6,29 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import redisClient from '@/lib/redis';
-export async function POST(req) {
-  try {
-    const { activity } = await req.json();
-    const cacheKey = `activities:${activity}`;
-    let cached = await redisClient.get(cacheKey);
-    if (cached) {
-      const pdfBuffer = Buffer.from(cached, 'base64');
-      return new NextResponse(pdfBuffer, {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/pdf',
-          'Content-Disposition': `attachment; filename="${activity.title.replace(/\s+/g, '_')}_activity.pdf"`,
-        },
-      });
-    }
-    const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
-    const imageBuffer = await fs.readFile(imagePath);
-    const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+async function generatePdf(activity, logoBase64) {
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath:
+      process.env.AWS_REGION || process.env.VERCEL
+        ? await chromium.executablePath()
+        : undefined,
+    headless: chromium.headless,
+  });
 
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath:
-        process.env.AWS_REGION || process.env.VERCEL
-          ? await chromium.executablePath()
-          : undefined,
-      headless: chromium.headless,
-    });
-    const page = await browser.newPage();
-    const formatToList = (text, listType = 'ul') => {
-      if (!text) return '';
-      const items = text.split('\n').map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`).join('');
-      return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
-    };
-    const fullHtml = `
+  const page = await browser.newPage();
+
+  const formatToList = (text, listType = 'ul') => {
+    if (!text) return '';
+    const items = text
+      .split('\n')
+      .map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`)
+      .join('');
+    return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
+  };
+
+  const fullHtml = `
 <html>
 <head>
   <script src="https://cdn.tailwindcss.com"></script>
@@ -119,41 +107,65 @@ export async function POST(req) {
 </html>
 `;
 
-    const footerTemplate = `
-      <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
+  const footerTemplate = `
+    <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
       <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
-  lessoncraft.com
-</a>
-        <div>
-          Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-        </div>
+        lessoncraft.com
+      </a>
+      <div>
+        Page <span class="pageNumber"></span> of <span class="totalPages"></span>
       </div>
-    `;
+    </div>
+  `;
 
-    await page.setContent(fullHtml, {
-      waitUntil: 'domcontentloaded',
-      timeout: 15000
+  await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+  const pdfBuffer = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    displayHeaderFooter: true,
+    headerTemplate: '<div></div>',
+    footerTemplate,
+    margin: { top: '25mm', bottom: '70px', right: '25mm', left: '25mm' },
+  });
+
+  await browser.close();
+  return pdfBuffer;
+}
+
+export async function POST(req) {
+  try {
+    const { activity } = await req.json();
+
+    const cacheKey = `pdf:${activity.title.replace(/\s+/g, '_')}`;
+
+    const cachedPdf = await redisClient.get(cacheKey);
+    if (cachedPdf) {
+      console.log("Serving from cache:", cacheKey);
+      return new NextResponse(Buffer.from(cachedPdf, 'base64'), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${cacheKey}.pdf"`,
+        },
+      });
+    }
+
+    const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
+    const imageBuffer = await fs.readFile(imagePath);
+    const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
+    const pdfBuffer = await generatePdf(activity, logoBase64);
+    await redisClient.set(cacheKey, pdfBuffer.toString('base64'), {
+      EX: 60 * 60 * 24,
     });
 
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<div></div>',
-      footerTemplate: footerTemplate,
-      margin: { top: '25mm', bottom: '70px', right: '25mm', left: '25mm' },
-    });
-
-    await browser.close();
-    await redisClient.setEx(cacheKey, 3600, pdfBuffer.toString('base64'));
     return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${activity.title.replace(/\s+/g, '_')}_activity.pdf"`,
+        'Content-Disposition': `attachment; filename="${cacheKey}.pdf"`,
       },
     });
-
   } catch (error) {
     console.error("Activity PDF Generation Error:", error);
     return new NextResponse(JSON.stringify({ error: "Failed to generate PDF." }), {
