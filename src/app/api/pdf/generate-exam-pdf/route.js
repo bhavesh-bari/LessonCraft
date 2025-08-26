@@ -10,11 +10,10 @@ export async function POST(req) {
   try {
     const { paperData } = await req.json();
     const cacheKey = `exam_pdf:${paperData.header.subject}:${paperData.header.marks}:${paperData.header.duration}`;
-    const cachedPdf = await redisClient.get(cacheKey);
-
+    const cachedPdf = await redisClient.getBuffer(cacheKey);
     if (cachedPdf) {
       console.log("✅ Serving Exam PDF from Redis Cache");
-      return new NextResponse(Buffer.from(cachedPdf, "base64"), {
+      return new NextResponse(cachedPdf, {
         status: 200,
         headers: {
           "Content-Type": "application/pdf",
@@ -112,9 +111,9 @@ export async function POST(req) {
 
     await browser.close();
 
-    // --- Store in Redis (Base64 encoded) ---
-    await redisClient.set(cacheKey, pdfBuffer.toString("base64"), { EX: 3600 }); // 1h expiry
+    await redisClient.set(cacheKey, pdfBuffer, { EX: 3600 }); // direct Buffer
     console.log("✅ Stored Exam PDF in Redis Cache");
+
 
 
     return new NextResponse(pdfBuffer, {
