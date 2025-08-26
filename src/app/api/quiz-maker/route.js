@@ -1,4 +1,3 @@
-// src/app/api/quiz-maker/route.js
 
 import { generateContent } from "@/lib/gemini";
 import { quizMakerPrompt } from "@/lib/prompts";

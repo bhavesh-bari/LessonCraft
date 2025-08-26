@@ -5,12 +5,23 @@ import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-import { requireAuth } from "@/lib/auth";
+
 export async function POST(req) {
   try {
-    await requireAuth();
     const { paperData } = await req.json();
+    const cacheKey = `exam_pdf:${paperData.header.subject}:${paperData.header.marks}:${paperData.header.duration}`;
+    const cachedPdf = await redisClient.get(cacheKey);
 
+    if (cachedPdf) {
+      console.log("✅ Serving Exam PDF from Redis Cache");
+      return new NextResponse(Buffer.from(cachedPdf, "base64"), {
+        status: 200,
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${paperData.header.subject.replace(/\s+/g, '_')}_exam.pdf"`,
+        },
+      });
+    }
     // Read the logo file and convert it to a Base64 data URI
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
@@ -73,7 +84,7 @@ export async function POST(req) {
     `;
 
     // --- Header and Footer Templates ---
-    const headerTemplate = `<div style="width: 100%; height: 50px;"></div>`; 
+    const headerTemplate = `<div style="width: 100%; height: 50px;"></div>`;
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
              <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
@@ -85,10 +96,10 @@ export async function POST(req) {
       </div>
     `;
 
-   await page.setContent(fullHtml, {
-  waitUntil: 'domcontentloaded',
-  timeout: 15000
-});
+    await page.setContent(fullHtml, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000
+    });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
@@ -100,6 +111,11 @@ export async function POST(req) {
     });
 
     await browser.close();
+
+    // --- Store in Redis (Base64 encoded) ---
+    await redisClient.set(cacheKey, pdfBuffer.toString("base64"), { EX: 3600 }); // 1h expiry
+    console.log("✅ Stored Exam PDF in Redis Cache");
+
 
     return new NextResponse(pdfBuffer, {
       status: 200,
