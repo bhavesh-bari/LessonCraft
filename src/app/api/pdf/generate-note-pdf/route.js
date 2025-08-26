@@ -5,9 +5,10 @@ import { NextResponse } from 'next/server';
 import { marked } from 'marked';
 import fs from 'fs/promises';
 import path from 'path';
-
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { notes, topic, subject } = await req.json();
     // Load logo as Base64
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');

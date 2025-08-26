@@ -1,56 +1,79 @@
+// src/app/api/generate-activity-pdf/route.js
+
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { activity } = await req.json();
-
-
+    console.log("Generating PDF for activity:", activity);
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
 
-    const isLocal = !process.env.AWS_REGION && !process.env.VERCEL;
-    const browser = await puppeteer.launch(
-      isLocal
-        ? {
-          headless: true,
-          executablePath: (await import('puppeteer')).executablePath(),
-          args: [],
-        }
-        : {
-          args: chromium.args,
-          defaultViewport: chromium.defaultViewport,
-          executablePath: await chromium.executablePath(),
-          headless: chromium.headless,
-        }
-    );
-
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath:
+        process.env.AWS_REGION || process.env.VERCEL
+          ? await chromium.executablePath()
+          : undefined,
+      headless: chromium.headless,
+    });
     const page = await browser.newPage();
     const formatToList = (text, listType = 'ul') => {
       if (!text) return '';
-      const items = text
-        .split('\n')
-        .map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`)
-        .join('');
-      return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'
-        }">${items}</${listType}>`;
+      const items = text.split('\n').map(item => `<li>${item.replace(/^\d+\.\s*/, '').replace(/^- /, '')}</li>`).join('');
+      return `<${listType} class="list-inside ${listType === 'ol' ? 'list-decimal' : 'list-disc'}">${items}</${listType}>`;
     };
-
     const fullHtml = `
 <html>
 <head>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #f8fafc; -webkit-print-color-adjust: exact; position: relative; }
-    .watermark { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); opacity: 0.05; font-size: 6rem; font-weight: bold; color: #4f46e5; white-space: nowrap; pointer-events: none; z-index: 0; }
-    .section { padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    .alt { background-color: #f9fafb; }
-    .section-title { font-size: 1.25rem; font-weight: 700; color: #4f46e5; margin-bottom: 0.5rem; border-bottom: 2px solid #e0e7ff; padding-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem; }
+    body { 
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      -webkit-print-color-adjust: exact;
+      position: relative;
+    }
+    .watermark {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.05;
+      font-size: 6rem;
+      font-weight: bold;
+      color: #4f46e5;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .section {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .alt {
+      background-color: #f9fafb;
+    }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #4f46e5;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid #e0e7ff;
+      padding-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body class="p-8 relative">
@@ -88,22 +111,26 @@ export async function POST(req) {
 
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 20mm; display: flex; justify-content: space-between; align-items: center; height: 50px; border-top: 1px solid #e5e7eb;">
-        <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
-          lessoncraft.com
-        </a>
+      <a href="https://lesson-craft-teach.vercel.app" target="_blank" rel="noopener noreferrer" style="color: #4f46e5; text-decoration: none;">
+  lessoncraft.com
+</a>
         <div>
           Page <span class="pageNumber"></span> of <span class="totalPages"></span>
         </div>
       </div>
     `;
 
-    await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.setContent(fullHtml, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000
+    });
+
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
       displayHeaderFooter: true,
       headerTemplate: '<div></div>',
-      footerTemplate,
+      footerTemplate: footerTemplate,
       margin: { top: '25mm', bottom: '70px', right: '25mm', left: '25mm' },
     });
 
@@ -116,8 +143,11 @@ export async function POST(req) {
         'Content-Disposition': `attachment; filename="${activity.title.replace(/\s+/g, '_')}_activity.pdf"`,
       },
     });
+
   } catch (error) {
     console.error("Activity PDF Generation Error:", error);
-    return new NextResponse(JSON.stringify({ error: "Failed to generate PDF." }), { status: 500 });
+    return new NextResponse(JSON.stringify({ error: "Failed to generate PDF." }), {
+      status: 500,
+    });
   }
 }

@@ -3,8 +3,10 @@
 import { generateContent } from "@/lib/gemini";
 import { classActivityPrompt } from "@/lib/prompts";
 import redisClient from '@/lib/redis';
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { subject, topic, activityType } = await req.json();
     const cacheKey = `activities:${subject}:${topic}:${activityType}`;
     let cached = await redisClient.get(cacheKey);

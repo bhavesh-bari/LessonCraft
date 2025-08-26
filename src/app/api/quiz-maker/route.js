@@ -3,8 +3,10 @@
 import { generateContent } from "@/lib/gemini";
 import { quizMakerPrompt } from "@/lib/prompts";
 import redisClient from '@/lib/redis';
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { subject, topic, numQuestions, questionType, difficulty } = await req.json();
     const cacheKey = `quiz-maker:${subject}:${topic}:${numQuestions}:${questionType}:${difficulty}`;
     let cached = await redisClient.get(cacheKey);

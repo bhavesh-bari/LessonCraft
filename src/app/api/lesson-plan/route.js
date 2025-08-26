@@ -2,9 +2,10 @@
 import { generateContent } from "@/lib/gemini";
 import { lessonPlanPrompt } from "@/lib/prompts";
 import redisClient from "@/lib/redis";
-
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { subject, topic, level } = await req.json();
 
     const cacheKey = `lesson-plan:${subject}:${topic}:${level}`;

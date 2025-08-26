@@ -3,8 +3,10 @@
 import { generateContent } from "@/lib/gemini";
 import { examPaperPrompt } from "@/lib/prompts";
 import redisClient from '@/lib/redis';
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { subject, syllabus, totalMarks, duration, questions } = await req.json();
     const cacheKey = `exam-generator:${subject}:${syllabus}:${totalMarks}:${duration}:${questions}`;
     let cached = await redisClient.get(cacheKey);

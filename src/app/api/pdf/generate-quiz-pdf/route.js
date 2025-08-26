@@ -5,9 +5,10 @@ import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
-
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { quizData, topic, subject } = await req.json();
 
     // Read the logo file and convert it to a Base64 data URI
@@ -105,10 +106,10 @@ export async function POST(req) {
       </div>
     `;
 
-   await page.setContent(fullHtml, {
-  waitUntil: 'domcontentloaded',
-  timeout: 15000
-});
+    await page.setContent(fullHtml, {
+      waitUntil: 'domcontentloaded',
+      timeout: 15000
+    });
 
     const pdfBuffer = await page.pdf({
       format: 'A4',

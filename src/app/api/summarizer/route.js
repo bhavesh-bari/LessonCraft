@@ -3,8 +3,10 @@
 import { generateContent } from "../../../lib/gemini";
 import { summarizerPrompt } from "../../../lib/prompts";
 import redisClient from '@/lib/redis';
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { topic, subject } = await req.json();
     const cacheKey = `summarizer:${subject}:${topic}`;
     let cached = await redisClient.get(cacheKey);

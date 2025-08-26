@@ -3,9 +3,10 @@
 import { generateContent } from "@/lib/gemini";
 import { notesGeneratorPrompt } from "@/lib/prompts";
 import redisClient from "@/lib/redis";
-
+import { requireAuth } from "@/lib/auth";
 export async function POST(req) {
   try {
+    await requireAuth();
     const { subject, topic } = await req.json();
     const cacheKey = `notes-generator:${subject}:${topic}`;
     let cached = await redisClient.get(cacheKey);
