@@ -1,111 +1,112 @@
-# 📚 LessonCraft ✨
+# 📚 LessonCraft – AI-Powered Teaching Assistant  
 
-**An intelligent, AI-powered platform designed to empower educators by automating the creation of high-quality teaching materials.**
-
-🔗 **Live Demo:** [LessonCraft](https://lesson-craft-teach.vercel.app/)
+LessonCraft is a Next.js-based web application that empowers educators by automating the creation of high-quality teaching materials. This platform streamlines lesson preparation, content generation, assessment creation, and student engagement tools – all in one place.  
 
 ---
 
-## 🚀 Project Overview
+## 📌 Overview  
 
-**LessonCraft** is a full-stack web application built to solve one of the biggest challenges teachers face:  
-the enormous amount of time spent on administrative and preparatory tasks.  
+LessonCraft helps teachers reduce time spent on administrative and preparatory tasks. By leveraging **Google Gemini AI**, it generates lesson plans, notes, quizzes, activities, and even exam papers in seconds.  
 
-By leveraging the power of the **Google Gemini API**, this platform automates the creation of **notes, quizzes, lesson plans, and exam papers**, allowing educators to focus on what they do best: **teaching**.
-
-This project is designed to be a one-stop solution for teachers across all grade levels, from **primary school to university**, providing them with the tools they need to create engaging and effective learning content in seconds.
+The app supports all grade levels, from **primary school to university**, ensuring tailored, engaging, and effective content delivery.  
 
 ---
 
-## 🔑 Key Features
+## 🚀 Features  
 
-Our suite of AI-powered tools is designed to cover every aspect of a teacher's workflow:
+### 🔹 Teaching Tools  
+- 📝 Generate structured **notes** in Markdown  
+- 🧠 Summarize **topics & articles** for any grade level  
+- 🗓️ Auto-create **lesson plans** with objectives & activities  
+- 🤸 Suggest **classroom activities** to boost engagement  
+- 🤔 Build **custom quizzes** (MCQ, T/F, etc.)  
+- ✍️ Generate **exam papers** with marks & syllabus integration  
+- 📜 Access **work history** and re-download past content  
 
-- **📝 Notes Generator** – Instantly create structured, Markdown-formatted notes on any topic.  
-- **🧠 Topic Summarizer** – Condense long articles or complex topics into concise summaries.  
-- **🗓️ Lesson Plan Generator** – Automatically design lesson plans with objectives, activities, and assessments.  
-- **🤸 Class Activity Generator** – Brainstorm fun and engaging classroom activities.  
-- **🤔 Quiz Maker** – Generate custom quizzes (MCQs, T/F, short answers) and export as PDFs.  
-- **✍️ Exam Paper Generator** – Build complete, formatted exam papers based on syllabus and marks.  
-- **📜 Work History** – Save, manage, and re-download all generated materials.  
-- **🔒 Authentication** – Secure login/signup with **NextAuth (Credentials Provider)**.  
-- **⚡ Caching** – Uses **Redis** to cache generated content for faster retrieval.  
-- **📄 PDF Export** – Generate downloadable PDFs with **Puppeteer + Chromium** (serverless ready).  
-
----
-
-## 💻 Tech Stack
-
-| Category             | Technology |
-| -------------------- | ---------- |
-| **Framework**        | [Next.js](https://nextjs.org/) (App Router) |
-| **Styling**          | [Tailwind CSS](https://tailwindcss.com/) |
-| **Authentication**   | [NextAuth.js](https://next-auth.js.org/) (Credentials Provider) |
-| **AI Engine**        | [Google Gemini API](https://ai.google.dev/) |
-| **Database & Cache** | [Redis](https://redis.io/) |
-| **PDF Generation**   | Puppeteer + [@sparticuz/chromium](https://github.com/Sparticuz/chromium) |
-| **UI Components**    | [Lucide React](https://lucide.dev/) |
-| **Markdown Rendering** | `react-markdown` |
-| **Deployment**       | [Vercel](https://vercel.com/) |
+### 🔹 Core Platform Features  
+- 🔒 **Authentication** with **NextAuth (Credentials)**  
+- ⚡ **Redis caching** for faster retrieval of generated content  
+- 📄 **PDF export** using Puppeteer + Chromium (serverless ready)  
+- 🎨 Clean UI with Tailwind + Lucide icons  
+- 📂 Markdown rendering for shareable notes  
 
 ---
 
-## 🛠️ Getting Started
+## 📲 System Workflow  
 
-### Prerequisites
+1. **Teacher selects a tool** (e.g., Notes Generator).  
+2. LessonCraft **sends input** to Gemini AI with pre-optimized prompts.  
+3. AI **generates structured content** (notes, plans, quizzes, etc.).  
+4. Teacher can **download/export as PDF** or save to history.  
+5. Cached results ensure **faster re-use** of previously generated content.  
 
-- Node.js (v18 or later)  
-- npm or yarn  
-- Google Gemini API Key  
-- Redis instance (local or cloud e.g., Redis Cloud)
+---
 
-### Installation
+## 🧠 Problem Statement  
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/bhavesh-bari/LessonCraft.git
-   cd lessoncraft
+Teachers spend **hours** preparing content, quizzes, and exams, leaving less time for actual teaching.  
+LessonCraft solves this by:  
+- Automating repetitive tasks  
+- Providing **AI-curated structured outputs**  
+- Saving & caching generated content for re-use  
+- Offering **instant PDF exports** for classroom-ready material  
 
-2.Install dependencies:
-  npm install
+---
 
+## ⚙️ Tech Stack  
 
-3.Set up your environment variables:
-Create a .env.local file in the root of your project and add:
+| Layer              | Technology |
+|--------------------|------------|
+| Frontend           | Next.js (App Router), Tailwind CSS |
+| Authentication     | NextAuth (Credentials Provider) |
+| AI Engine          | Google Gemini API |
+| Database & Caching | Redis |
+| PDF Generation     | Puppeteer + @sparticuz/chromium |
+| UI Components      | Lucide React |
+| Markdown Rendering | React-Markdown |
+| Deployment         | Vercel |
 
-GEMINI_API_KEY="YOUR_API_KEY"
-NEXTAUTH_SECRET="YOUR_NEXTAUTH_SECRET"
-NEXTAUTH_URL="http://localhost:3000"
-REDIS_URL="YOUR_REDIS_URL"
+---
 
-4.Run the development server:
-npm run dev
+## 📈 Future Enhancements  
 
-Open http://localhost:3000
- with your browser.
+- 🔮 AI-powered **syllabus-based content mapping**  
+- 📊 Analytics dashboard for **student progress tracking**  
+- 🤖 AI chatbot for **student Q&A support**  
+- 🌍 Multi-language content generation  
+- 🔐 Role-based access for schools & institutions  
 
-📁 Project Structure
+---
 
-lessoncraft/
-├─ src/
-│ ├─ app/ # App Router pages & APIs
-│ │ ├─ api/ # Backend routes (Gemini, PDF, etc.)
-│ │ ├─ tools/ # Feature pages (Notes, Quiz, etc.)
-│ │ ├─ layout.tsx # Root layout & SEO
-│ │ └─ page.tsx # Dashboard/Home
-│ ├─ components/ # Navbar, Sidebar, UI blocks
-│ └─ lib/ # Core services & utilities
-│ ├─ gemini.ts # Gemini API wrapper
-│ ├─ prompts.ts # Prompt templates
-│ ├─ redis.ts # Redis connection/client
-│ └─ auth.ts # NextAuth configuration
-├─ public/ # Static assets
-├─ .env.local # Environment variables
-└─ README.md
+## 💼 Target Users  
 
+- **Teachers & Professors** – To save time in lesson planning & assessment creation  
+- **Schools & Institutions** – For standardized teaching materials  
+- **Tutors & Trainers** – To deliver engaging content quickly  
 
-👤 Author
+---
 
-Bhavesh Bari
-Mail: bhaveshbari0402@gmail.com
-LinkedIn: [Bhavesh Bari](https://www.linkedin.com/in/bhavesh-bari/)
+## 📊 Competitive Edge  
+
+Compared to generic AI tools:  
+- ✅ **Education-focused prompts** fine-tuned for teachers  
+- ✅ **Integrated PDF export** with classroom-ready formatting  
+- ✅ **Caching system** (Redis) to re-use content instantly  
+- ✅ **Work history** to manage past teaching materials  
+
+---
+
+## 🌐 Live Demo  
+
+👉 [LessonCraft – Try it Now](https://lesson-craft-teach.vercel.app/)  
+
+---
+
+## 📩 Contact  
+
+For any queries or feedback, feel free to contact:  
+**bhaveshbari0402@gmail.com**  
+
+---
+
+⭐ Thank you for checking out **LessonCraft**!  
