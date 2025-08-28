@@ -87,21 +87,21 @@ Open http://localhost:3000
 📁 Project Structure
 
 lessoncraft/
-│── src/
-│   ├── app/                # App Router pages & APIs
-│   │   ├── api/            # Backend API routes (Gemini, PDF, etc.)
-│   │   ├── tools/          # Individual tool pages (Notes, Quiz, etc.)
-│   │   ├── layout.js       # Root layout with SEO
-│   │   └── page.js         # Homepage/dashboard
-│   ├── components/         # Shared components (Navbar, Sidebar, etc.)
-│   └── lib/                # Core services & utilities
-│       ├── gemini.js       # Gemini API wrapper
-│       ├── prompts.js      # AI prompt templates
-│       ├── redis.js        # Redis connection
-│       └── auth.js         # NextAuth configuration
-│
-│── public/                 # Static assets
-│── .env.local              # Environment variables
+├─ src/
+│ ├─ app/ # App Router pages & APIs
+│ │ ├─ api/ # Backend routes (Gemini, PDF, etc.)
+│ │ ├─ tools/ # Feature pages (Notes, Quiz, etc.)
+│ │ ├─ layout.tsx # Root layout & SEO
+│ │ └─ page.tsx # Dashboard/Home
+│ ├─ components/ # Navbar, Sidebar, UI blocks
+│ └─ lib/ # Core services & utilities
+│ ├─ gemini.ts # Gemini API wrapper
+│ ├─ prompts.ts # Prompt templates
+│ ├─ redis.ts # Redis connection/client
+│ └─ auth.ts # NextAuth configuration
+├─ public/ # Static assets
+├─ .env.local # Environment variables
+└─ README.md
 
 
 👤 Author
