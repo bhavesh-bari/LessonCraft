@@ -1,10 +1,11 @@
-
 "use client";
 
 import React, { useState } from 'react';
+import { useSession } from "next-auth/react";
 import { BookCopy, FileQuestion, Hash, CheckSquare, Wand2, Loader2, FileDown, RefreshCw, HelpCircle, MessageSquareWarning, Star, Shuffle, PencilRuler } from 'lucide-react';
 export default function QuizMakerPage() {
     // --- State Management ---
+    const { data: session, status } = useSession();
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
     const [numQuestions, setNumQuestions] = useState(10);
@@ -12,6 +13,7 @@ export default function QuizMakerPage() {
     const [difficulty, setDifficulty] = useState(2);
     const [isLoading, setIsLoading] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
     const [generatedQuiz, setGeneratedQuiz] = useState(null);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
     const [showAnswers, setShowAnswers] = useState(false);
@@ -90,6 +92,40 @@ export default function QuizMakerPage() {
         }
     };
 
+    const handleExportToGoogleForms = async () => {
+        if (!generatedQuiz) return;
+
+        if (!session) {
+            window.location.href = "/api/google/connect";
+            return;
+        }
+
+        setIsExporting(true);
+        try {
+            const res = await fetch("/api/google/export", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quizData: generatedQuiz, subject, topic }),
+            });
+
+            const data = await res.json();
+
+            if (res.status === 403) {
+                alert(data.error || "Please connect your Google account to export this quiz.");
+                window.location.href = "/api/google/connect";
+            } else if (data.formUrl) {
+                window.open(data.formUrl, "_blank");
+            } else {
+                alert(data.error || "Failed to export");
+            }
+        } catch (err) {
+            console.error("Export to Google Forms error:", err);
+            alert("An error occurred during export.");
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     const handleRegenerate = () => {
         setGeneratedQuiz(null);
     };
@@ -97,7 +133,6 @@ export default function QuizMakerPage() {
 
     return (
         <div className="min-h-screen bg-blue-200 font-sans">
-
             {showSuccessToast && (
                 <div className="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in">
                     <CheckSquare size={20} />
@@ -180,7 +215,7 @@ export default function QuizMakerPage() {
                                         type="button"
                                         onClick={() => setDifficulty(level.value)}
                                         className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-semibold border-2 transition-all
-          ${difficulty == level.value
+                    ${difficulty == level.value
                                                 ? "border-green-600 bg-green-50 text-green-700"
                                                 : "border-gray-300 bg-white hover:bg-gray-50 text-gray-600"
                                             }`}
@@ -235,24 +270,13 @@ export default function QuizMakerPage() {
                                 {isDownloading ? 'Downloading...' : 'Download as PDF'}
                             </button>
                             <button
-                                onClick={async () => {
-                                    if (!generatedQuiz) return;
-                                    const res = await fetch("/api/google/export", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ quizData: generatedQuiz, subject, topic }),
-                                    });
-                                    const data = await res.json();
-                                    if (data.formUrl) window.open(data.formUrl, "_blank");
-                                    else alert(data.error || "Failed to export");
-                                }}
+                                onClick={handleExportToGoogleForms}
+                                disabled={isExporting}
                                 className="bg-green-600 text-white px-4 py-2 rounded-lg"
                             >
+                                {isExporting ? <Loader2 className="animate-spin" size={18} /> : null}
                                 Export to Google Form
                             </button>
-
-
-
                             <button onClick={handleRegenerate} className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors">
                                 <RefreshCw size={18} /> Regenerate Quiz
                             </button>

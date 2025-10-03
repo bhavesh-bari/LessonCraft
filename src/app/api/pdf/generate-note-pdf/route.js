@@ -1,4 +1,5 @@
 // src/app/api/notes-generator-pdf/route.js
+// import puppeteer from 'puppeteer';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
@@ -6,15 +7,28 @@ import { marked } from 'marked';
 import fs from 'fs/promises';
 import path from 'path';
 import { requireAuth } from "@/lib/auth";
+
 export async function POST(req) {
   try {
     await requireAuth();
     const { notes, topic, subject } = await req.json();
+
+    // Convert notes array into a single Markdown string
+    // Each subtopic gets a heading and description
+    const markdownString = notes
+      .map(
+        (n) => `## ${n.name}\n*${n.description}*\n\n${n.content}`
+      )
+      .join('\n\n---\n\n');
+
+    // Convert Markdown to HTML
+    const bodyHtml = marked.parse(markdownString);
+
     // Load logo as Base64
     const imagePath = path.join(process.cwd(), 'public', 'LessonCraftLogo.png');
     const imageBuffer = await fs.readFile(imagePath);
     const logoBase64 = `data:image/png;base64,${imageBuffer.toString('base64')}`;
-    const bodyHtml = marked.parse(notes);
+
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -86,6 +100,17 @@ export async function POST(req) {
       </html>
     `;
 
+    // const isLocal = !process.env.VERCEL;
+
+    // const browser = await puppeteer.launch(
+    //   isLocal
+    //     ? { headless: true } // uses local Puppeteer Chromium
+    //     : {
+    //       args: chromium.args,
+    //       executablePath: await chromium.executablePath(),
+    //       headless: chromium.headless,
+    //     }
+    // );
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
@@ -95,10 +120,8 @@ export async function POST(req) {
           : undefined,
       headless: chromium.headless,
     });
-
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
-
 
     const footerTemplate = `
       <div style="width: 100%; font-size: 10px; padding: 0 40px;
@@ -110,7 +133,6 @@ export async function POST(req) {
         <div>Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>
       </div>
     `;
-
 
     const pdfBuffer = await page.pdf({
       format: 'A4',

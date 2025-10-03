@@ -17,8 +17,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Password is required'],
   },
-
-  // 🔑 Add Google OAuth fields
   googleAccessToken: {
     type: String,
     default: null,

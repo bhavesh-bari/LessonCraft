@@ -260,3 +260,84 @@ recapAndReflection:{
 }
   }
 `;
+export function subtopicsPrompt(subject, topic) {
+  return `
+You are a curriculum designer.  
+Generate a clear **JSON array** of subtopics for the main topic "${topic}" in subject "${subject}".  
+
+Rules:
+- Only output valid JSON array (no markdown fences, no explanations).  
+- Each subtopic should have: "name" and "description".  
+- Keep subtopics in logical order as taught in class.  
+
+Example Output:
+[
+  { "name": "Introduction to Arrays", "description": "Definition, need, and applications" },
+  { "name": "Array Operations", "description": "Traversal, Insertion, Deletion, Searching" },
+  { "name": "Complexity Analysis of Arrays", "description": "Time and space analysis" }
+]
+  `;
+}
+export function subtopicDetailsPrompt(subject, topic, subtopic) {
+  return `
+You are a teaching assistant.  
+Generate **well-structured, textbook-style notes** for the subtopic "${subtopic}" under topic "${topic}" in subject "${subject}".  
+
+Use this exact hierarchy in Markdown:
+
+### 1. Introduction
+- Definition
+- Why it is needed (real-life analogy if possible)
+- Applications
+
+### 2. Theory Explanation
+- In-depth explanation
+- Diagrams/flowcharts (describe in text if not possible to draw)
+- Step-by-step breakdown
+
+### 3. Properties & Characteristics
+- Key properties
+- Advantages & disadvantages
+
+### 4. Mathematical / Logical Representation
+- Important formulas
+- Derivations (if any)
+
+### 5. Operations / Algorithms
+For each algorithm:
+- Problem statement
+- Step-by-step algorithm
+- Dry run example
+- Pseudocode
+- Code (C++/Java/Python)
+
+### 6. Complexity Analysis
+- Time complexity (Best, Worst, Average)
+- Space complexity
+- Comparison with alternatives
+
+### 7. Examples
+- At least 1–2 solved problems (small, medium, complex)
+
+### 8. Common Mistakes & Edge Cases
+- Where students go wrong
+- Special cases
+
+### 9. Real-Life Applications
+- How this concept is used in real world
+
+### 10. Practice Problems
+- Easy
+- Medium
+- Hard
+
+### 11. Summary / Key Points
+-  quick revision of points covered
+- Highlighted formulas and shortcuts
+
+⚠️ Rules:
+- Output must be in **Markdown only**
+- No JSON, no code fences like \`\`\`
+- Keep explanations student-friendly but detailed
+  `;
+}

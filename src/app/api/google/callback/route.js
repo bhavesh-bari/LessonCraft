@@ -4,17 +4,14 @@ import { getGoogleOAuthClient } from "@/lib/google";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/userModel";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust path
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export async function GET(req) {
   await dbConnect();
 
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
-
-  if (!code) {
-    return NextResponse.json({ error: "Missing OAuth code" }, { status: 400 });
-  }
+  if (!code) return NextResponse.json({ error: "Missing OAuth code" }, { status: 400 });
 
   try {
     const session = await getServerSession(authOptions);
@@ -22,15 +19,16 @@ export async function GET(req) {
       return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/login`);
     }
 
-    const oauth2Client = getGoogleOAuthClient();
-    const { tokens } = await oauth2Client.getToken(code);
+    const oauth2 = getGoogleOAuthClient();
+    const { tokens } = await oauth2.getToken(code);
 
     await User.findByIdAndUpdate(session.user.id, {
-      googleAccessToken: tokens.access_token,
-      googleRefreshToken: tokens.refresh_token,
+      googleAccessToken: tokens.access_token || null,
+      googleRefreshToken: tokens.refresh_token || null, // only comes first time (prompt=consent)
       googleTokenExpiry: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
     });
 
+    // absolute URL required
     return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?google=connected`);
   } catch (err) {
     console.error("Google callback error:", err);

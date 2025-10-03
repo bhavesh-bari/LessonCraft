@@ -33,7 +33,7 @@ export default function NotesGeneratorPage() {
             }
 
             const data = await response.json();
-            setGeneratedNotes(data.notes);
+            setGeneratedNotes(data.notes); // notes is now an array of objects
 
         } catch (error) {
             console.error("Failed to fetch notes:", error);
@@ -135,6 +135,7 @@ export default function NotesGeneratorPage() {
                             </button>
                         </form>
                     )}
+
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center gap-4 py-12">
                             <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
@@ -167,9 +168,15 @@ export default function NotesGeneratorPage() {
                             </div>
 
                             <article className="prose max-w-none p-6 border border-gray-200 rounded-lg bg-gray-50 h-96 overflow-y-auto">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {generatedNotes}
-                                </ReactMarkdown>
+                                {generatedNotes.map((subtopic, index) => (
+                                    <div key={index} className="mb-6">
+                                        <h2 className="text-xl font-bold">{subtopic.name}</h2>
+                                        <p className="italic mb-2">{subtopic.description}</p>
+                                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                            {subtopic.content}
+                                        </ReactMarkdown>
+                                    </div>
+                                ))}
                             </article>
 
                             <button

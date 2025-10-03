@@ -1,6 +1,6 @@
 // src/app/api/google/connect/route.js
 import { NextResponse } from "next/server";
-import { getGoogleAuthURL } from "@/lib/google"; // adjust path
+import { getGoogleAuthURL } from "@/lib/google";
 
 export async function GET() {
   try {

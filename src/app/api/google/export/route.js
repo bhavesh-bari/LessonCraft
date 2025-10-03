@@ -1,17 +1,23 @@
-// src/app/api/google/export/route.js
 import { NextResponse } from "next/server";
 import { google } from "googleapis";
 import dbConnect from "@/lib/dbConnect";
 import User from "@/models/userModel";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getAuthedGoogleClientFromUser } from "@/lib/google";
 
 export async function POST(req) {
   await dbConnect();
+
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
 
   const { quizData, subject, topic } = await req.json();
+  if (!quizData?.length) {
+    return NextResponse.json({ error: "No quiz data" }, { status: 400 });
+  }
 
   const user = await User.findById(session.user.id);
   if (!user?.googleAccessToken) {
@@ -19,20 +25,31 @@ export async function POST(req) {
   }
 
   try {
-    const auth = new google.auth.OAuth2();
-    auth.setCredentials({
-      access_token: user.googleAccessToken,
-      refresh_token: user.googleRefreshToken,
-    });
+    // Build client + auto-refresh if needed
+    const { auth, refreshed } = await getAuthedGoogleClientFromUser(user);
+
+    // If refreshed, persist new tokens
+    if (refreshed?.access_token) {
+      user.googleAccessToken = refreshed.access_token;
+    }
+    if (refreshed?.refresh_token) {
+      user.googleRefreshToken = refreshed.refresh_token;
+    }
+    if (refreshed?.expiry_date) {
+      user.googleTokenExpiry = new Date(refreshed.expiry_date);
+    }
+    if (refreshed) await user.save();
 
     const forms = google.forms({ version: "v1", auth });
 
-    // Create new form
-    const form = await forms.forms.create({
-      requestBody: { info: { title: `${subject} - ${topic} Quiz` } },
+    // 1) Create a new Form
+    const created = await forms.forms.create({
+      requestBody: { info: { title: `${subject || "Quiz"} - ${topic || ""}`.trim() } },
     });
 
-    // Add quiz items
+    const formId = created.data.formId;
+
+    // 2) Add items and set quiz mode
     const requests = quizData.map((q, i) => ({
       createItem: {
         item: {
@@ -45,6 +62,13 @@ export async function POST(req) {
                 options: q.options.map((opt) => ({ value: opt })),
                 shuffle: false,
               },
+              // Add grading information to make it a self-grading quiz
+              grading: {
+                pointValue: 1,
+                correctAnswers: {
+                  answers: [{ value: q.answer }],
+                },
+              },
             },
           },
         },
@@ -52,14 +76,31 @@ export async function POST(req) {
       },
     }));
 
+    // Add a request to enable quiz settings on the form
+    requests.push({
+      updateFormSettings: {
+        settings: {
+          quizSettings: {
+            isQuiz: true
+          }
+        },
+        updateMask: 'quizSettings.isQuiz'
+      }
+    });
+
     await forms.forms.batchUpdate({
-      formId: form.data.formId,
+      formId,
       requestBody: { requests },
     });
 
-    return NextResponse.json({ formUrl: form.data.responderUri });
+    // 3) Return URLs
+    return NextResponse.json({
+      formId,
+      formUrl: created.data.responderUri,
+      editorUrl: `https://docs.google.com/forms/d/${formId}/edit`,
+    });
   } catch (err) {
-    console.error("Google Form export error:", err);
+    console.error("Google Form export error:", err?.response?.data || err);
     return NextResponse.json({ error: "Failed to export" }, { status: 500 });
   }
 }
