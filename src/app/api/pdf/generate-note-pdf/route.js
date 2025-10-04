@@ -102,15 +102,15 @@ export async function POST(req) {
 
     // const isLocal = !process.env.VERCEL;
 
-    // const browser = await puppeteer.launch(
-    //   isLocal
-    //     ? { headless: true } // uses local Puppeteer Chromium
-    //     : {
-    //       args: chromium.args,
-    //       executablePath: await chromium.executablePath(),
-    //       headless: chromium.headless,
-    //     }
-    // );
+    // // const browser = await puppeteer.launch(
+    // //   isLocal
+    // //     ? { headless: true } // uses local Puppeteer Chromium
+    // //     : {
+    // //       args: chromium.args,
+    // //       executablePath: await chromium.executablePath(),
+    // //       headless: chromium.headless,
+    // //     }
+    // // );
     const browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,

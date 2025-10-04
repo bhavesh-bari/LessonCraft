@@ -1,8 +1,18 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-const authOptions = {
+
+// Normalize imports to support both ESM (default export) and CommonJS interop
+const NextAuthFn = (NextAuth && NextAuth.__esModule)
+  ? NextAuth.default || NextAuth
+  : NextAuth;
+
+const Credentials = (CredentialsProvider && CredentialsProvider.__esModule)
+  ? CredentialsProvider.default || CredentialsProvider
+  : CredentialsProvider;
+
+export const authOptions = {
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
@@ -19,10 +29,9 @@ const authOptions = {
         });
 
         const data = await res.json();
-
-         if (!res.ok || !data.user) {
-    throw new Error("Invalid email or password"); 
-  }
+        if (!res.ok || !data.user) {
+          throw new Error("Invalid email or password");
+        }
 
         return {
           id: data.user._id || data.user.id || null,
@@ -38,7 +47,7 @@ const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role || null;
-        token.accessToken = user.token; 
+        token.accessToken = user.token;
       }
       return token;
     },
@@ -55,5 +64,5 @@ const authOptions = {
   secret: process.env.NEXTAUTH_SECRET
 };
 
-const handler = NextAuth(authOptions);
+const handler = NextAuthFn(authOptions);
 export { handler as GET, handler as POST };

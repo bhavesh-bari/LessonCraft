@@ -1,47 +1,77 @@
 "use client";
 
 import React, { useState } from 'react';
-import { BookText, FileText, Sparkles, Loader2, Download, NotebookPen } from 'lucide-react';
+import { BookText, FileText, Sparkles, Loader2, Download, NotebookPen, Clock } from 'lucide-react'; // Added Clock icon
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+
+// Helper component for the extended loading status
+const PollingStatus = () => (
+    <div className="flex flex-col items-center justify-center gap-6 p-6 border border-yellow-300 bg-yellow-50 rounded-lg text-yellow-800">
+        <Clock className="w-8 h-8" />
+        <h3 className="text-xl font-bold text-center">Notes Generation in Progress...</h3>
+        <p className="text-center text-gray-600">
+            This process is running in the background to ensure **high-quality, comprehensive notes** are created.
+        </p>
+        <p className="text-center font-semibold">
+            It may take anywhere from **5 to 20 minutes** depending on the topic's complexity. Please keep this window open!
+        </p>
+    </div>
+);
 
 export default function NotesGeneratorPage() {
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isPolling, setIsPolling] = useState(false); // New state to manage the longer status
     const [generatedNotes, setGeneratedNotes] = useState(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handleGenerateNotes = async (e) => {
         e.preventDefault();
-        if (!subject || !topic) {
-            alert("Please enter both subject and topic.");
-            return;
-        }
-        setIsLoading(true);
+        setIsLoading(true); // Start loading, showing the initial spinner
         setGeneratedNotes(null);
 
-        try {
-            const response = await fetch('/api/notes-generator', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ subject, topic }),
-            });
+        const startRes = await fetch("/api/notes-generator/start", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subject, topic }),
+        });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            setGeneratedNotes(data.notes); // notes is now an array of objects
-
-        } catch (error) {
-            console.error("Failed to fetch notes:", error);
-            alert("Failed to generate notes. Please try again.");
-        } finally {
+        if (!startRes.ok) {
             setIsLoading(false);
+            alert("Failed to start notes generation job.");
+            return;
         }
+
+        const { jobId } = await startRes.json();
+
+        // After a short delay (e.g., 3 seconds), switch to the detailed polling status
+        setTimeout(() => {
+            setIsPolling(true);
+        }, 3000); // Wait 3 seconds before showing the long-wait message
+
+        // Polling for status
+        // A shorter interval (e.g., 3-5s) is generally better for responsiveness, 
+        // though the long message handles the wait expectation.
+        const pollInterval = setInterval(async () => {
+            const res = await fetch(`/api/notes-generator/status?jobId=${jobId}`);
+            const data = await res.json();
+
+            if (data.status === "completed") {
+                clearInterval(pollInterval);
+                setGeneratedNotes(data.data.notes);
+                setIsLoading(false);
+                setIsPolling(false);
+            } else if (data.status === "failed") {
+                clearInterval(pollInterval);
+                alert("Failed to generate notes. Please try a different topic.");
+                setIsLoading(false);
+                setIsPolling(false);
+            }
+        }, 3000); // Polling every 3 seconds
     };
+
 
     const handleDownloadPdf = async () => {
         if (!generatedNotes || !topic) return;
@@ -94,6 +124,7 @@ export default function NotesGeneratorPage() {
                     </div>
                 </div>
                 <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg">
+                    {/* Input Form */}
                     {!isLoading && !generatedNotes && (
                         <form onSubmit={handleGenerateNotes} className="space-y-6">
                             <div>
@@ -136,13 +167,23 @@ export default function NotesGeneratorPage() {
                         </form>
                     )}
 
+                    {/* Loading State */}
                     {isLoading && (
-                        <div className="flex flex-col items-center justify-center gap-4 py-12">
+                        <div className="flex flex-col items-center justify-center gap-6 py-12">
                             <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
                             <p className="text-xl font-semibold text-gray-600">Generating your notes... Please wait.</p>
+
+                            {/* Detailed Polling Status with time estimate */}
+                            {isPolling && (
+                                <>
+                                    <div className="w-full h-px bg-gray-200 my-4" />
+                                    <PollingStatus />
+                                </>
+                            )}
                         </div>
                     )}
 
+                    {/* Generated Notes Display */}
                     {generatedNotes && (
                         <div>
                             <div className="flex justify-between items-center mb-6">

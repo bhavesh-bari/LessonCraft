@@ -87,10 +87,10 @@ export const examPaperPrompt = (subject, syllabus, totalMarks, duration, questio
        main_question: ${q.text || 'Generate a suitable main question based on the syllabus.'}
        marks: ${q.marks || 'auto'}
        sub_questions: ${q.subQuestions && q.subQuestions.length > 0
-         ? q.subQuestions.map((sq, sqIndex) =>
-             `(${String.fromCharCode(97 + sqIndex)}) ${sq.text || 'Generate a subquestion.'} (Marks: ${sq.marks || 'auto'})`
-           ).join('\n         ')
-         : 'Generate 2–4 relevant subquestions with reasonable marks each.'}`
+      ? q.subQuestions.map((sq, sqIndex) =>
+        `(${String.fromCharCode(97 + sqIndex)}) ${sq.text || 'Generate a subquestion.'} (Marks: ${sq.marks || 'auto'})`
+      ).join('\n         ')
+      : 'Generate 2–4 relevant subquestions with reasonable marks each.'}`
   ).join('\n');
 
   return `
@@ -262,6 +262,7 @@ recapAndReflection:{
 `;
 export function subtopicsPrompt(subject, topic) {
   return `
+
 You are a curriculum designer.  
 Generate a clear **JSON array** of subtopics for the main topic "${topic}" in subject "${subject}".  
 
@@ -291,19 +292,23 @@ Use this exact hierarchy in Markdown:
 - Applications
 
 ### 2. Theory Explanation
+(Note Give below points if feasable and well suitable and make sence)
 - In-depth explanation
 - Diagrams/flowcharts (describe in text if not possible to draw)
 - Step-by-step breakdown
 
 ### 3. Properties & Characteristics
+(Note Give below points if feasable and well suitable and make sence)
 - Key properties
 - Advantages & disadvantages
 
 ### 4. Mathematical / Logical Representation
+(Note Give below points if feasable and well suitable and make sence)
 - Important formulas
 - Derivations (if any)
 
 ### 5. Operations / Algorithms
+(Note Give below points if feasable and well suitable and make sence)
 For each algorithm:
 - Problem statement
 - Step-by-step algorithm
@@ -312,26 +317,32 @@ For each algorithm:
 - Code (C++/Java/Python)
 
 ### 6. Complexity Analysis
+(Note Give below points if feasable and well suitable and make sence)
 - Time complexity (Best, Worst, Average)
 - Space complexity
 - Comparison with alternatives
 
 ### 7. Examples
+(Note Give below points if feasable and well suitable and make sence)
 - At least 1–2 solved problems (small, medium, complex)
 
 ### 8. Common Mistakes & Edge Cases
+(Note Give below points if feasable and well suitable and make sence)
 - Where students go wrong
 - Special cases
 
 ### 9. Real-Life Applications
+(Note Give below points if feasable and well suitable and make sence)
 - How this concept is used in real world
 
 ### 10. Practice Problems
+(Note Give below points if feasable and well suitable and make sence)
 - Easy
 - Medium
 - Hard
 
 ### 11. Summary / Key Points
+(Note Give below points if feasable and well suitable and make sence)
 -  quick revision of points covered
 - Highlighted formulas and shortcuts
 

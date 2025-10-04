@@ -2,11 +2,13 @@
   "name": "teachgenai",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "start:worker": "node worker/notesWorker.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -18,13 +20,14 @@
     "formidable": "^3.5.4",
     "googleapis": "^155.0.1",
     "html2canvas": "^1.4.1",
+    "ioredis": "^5.8.0",
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.1",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.536.0",
     "marked": "^16.1.2",
     "mongoose": "^8.17.1",
-    "next": "15.4.5",
+    "next": "^15.5.4",
     "next-auth": "^4.24.11",
     "next-nprogress-bar": "^2.4.7",
     "pdf-parse": "^1.1.1",
