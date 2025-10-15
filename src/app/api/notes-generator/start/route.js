@@ -8,9 +8,10 @@ export async function POST(req) {
     const cacheKey = `notes-generator:${subject}:${topic}`;
 
     const existingJobId = await redisClient.get(`${cacheKey}:jobId`);
+    // NOTE: In a real system, you'd check the notes:status:{jobId} to ensure it's not 'failed' or 'expired'.
     if (existingJobId) {
-
-        return new Response(JSON.stringify({ jobId: existingJobId }), {
+        // Instead of returning only the ID, tell the client to check the **stream**
+        return new Response(JSON.stringify({ jobId: existingJobId, streamUrl: `/api/notes-generator/stream?jobId=${existingJobId}` }), {
             status: 200,
             headers: { "Content-Type": "application/json" },
         });
@@ -25,7 +26,8 @@ export async function POST(req) {
 
     await redisClient.setEx(`${cacheKey}:jobId`, 86400, jobId);
 
-    return new Response(JSON.stringify({ jobId }), {
+    // Return the jobId and the new stream URL
+    return new Response(JSON.stringify({ jobId, streamUrl: `/api/notes-generator/stream?jobId=${jobId}` }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
     });

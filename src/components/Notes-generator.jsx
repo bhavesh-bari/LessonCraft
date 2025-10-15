@@ -1,37 +1,80 @@
+// note.jsx
 "use client";
 
-import React, { useState } from 'react';
-import { BookText, FileText, Sparkles, Loader2, Download, NotebookPen, Clock } from 'lucide-react'; // Added Clock icon
+import React, { useState, useEffect, useRef } from 'react';
+import { BookText, FileText, Sparkles, Loader2, Download, NotebookPen, Clock } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 // Helper component for the extended loading status
-const PollingStatus = () => (
-    <div className="flex flex-col items-center justify-center gap-6 p-6 border border-yellow-300 bg-yellow-50 rounded-lg text-yellow-800">
-        <Clock className="w-8 h-8" />
-        <h3 className="text-xl font-bold text-center">Notes Generation in Progress...</h3>
-        <p className="text-center text-gray-600">
-            This process is running in the background to ensure **high-quality, comprehensive notes** are created.
-        </p>
-        <p className="text-center font-semibold">
-            It may take anywhere from **5 to 20 minutes** depending on the topic's complexity. Please keep this window open!
-        </p>
-    </div>
-);
+const PollingStatus = ({ status, progress, currentSubtopic, totalSubtopics }) => {
+    let message = "The worker is still initializing the job. Please wait a moment...";
+    let details = "This process is designed to ensure **high-quality, comprehensive notes** are created.";
+    let icon = <Clock className="w-8 h-8" />;
+
+    if (status === 'generating_subtopics') {
+        message = "Step 1/2: Generating the core subtopics list...";
+        details = "This initial step sets the structure for your notes.";
+        icon = <Sparkles className="w-8 h-8 animate-pulse" />;
+    } else if (status === 'generating_details' && currentSubtopic) {
+        const percentage = Math.round(progress * 100);
+        message = `Step 2/2: Generating details for subtopic **${currentSubtopic}**...`;
+        details = `Current Progress: **${percentage}%** (${totalSubtopics} subtopics to cover).`;
+        icon = <Loader2 className="w-8 h-8 animate-spin" />;
+    } else if (status === 'completed') {
+        message = "Job complete! Finalizing notes...";
+        details = ""; // Cleared details on completion
+        icon = <Sparkles className="w-8 h-8" />;
+    }
+
+    return (
+        <div className="flex flex-col items-center justify-center gap-6 p-6 border border-yellow-300 bg-yellow-50 rounded-lg text-yellow-800">
+            {icon}
+            <h3 className="text-xl font-bold text-center">Notes Generation in Progress...</h3>
+            <p className="text-center text-gray-600">
+                {message}
+            </p>
+            <p className="text-center font-semibold">
+                {details}
+            </p>
+        </div>
+    );
+};
 
 export default function NotesGeneratorPage() {
     const [subject, setSubject] = useState('');
     const [topic, setTopic] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [isPolling, setIsPolling] = useState(false); // New state to manage the longer status
+    const [jobStatus, setJobStatus] = useState(null); // Holds the last status object from SSE
     const [generatedNotes, setGeneratedNotes] = useState(null);
     const [isDownloading, setIsDownloading] = useState(false);
 
+    // Ref to hold the EventSource instance for real-time updates
+    const eventSourceRef = useRef(null);
+
+    // Cleanup effect to close the EventSource when the component unmounts
+    useEffect(() => {
+        return () => {
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
+        };
+    }, []);
+
     const handleGenerateNotes = async (e) => {
         e.preventDefault();
-        setIsLoading(true); // Start loading, showing the initial spinner
-        setGeneratedNotes(null);
 
+        // 1. Reset state and close any existing connection
+        setIsLoading(true);
+        setGeneratedNotes(null);
+        setJobStatus(null);
+        if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+            eventSourceRef.current = null;
+        }
+
+        // 2. Start the job on the server (returns job ID and stream URL)
         const startRes = await fetch("/api/notes-generator/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -44,32 +87,47 @@ export default function NotesGeneratorPage() {
             return;
         }
 
-        const { jobId } = await startRes.json();
+        const { jobId, streamUrl } = await startRes.json();
 
-        // After a short delay (e.g., 3 seconds), switch to the detailed polling status
-        setTimeout(() => {
-            setIsPolling(true);
-        }, 3000); // Wait 3 seconds before showing the long-wait message
+        // 3. Start the SSE connection
+        eventSourceRef.current = new EventSource(streamUrl);
 
-        // Polling for status
-        // A shorter interval (e.g., 3-5s) is generally better for responsiveness, 
-        // though the long message handles the wait expectation.
-        const pollInterval = setInterval(async () => {
-            const res = await fetch(`/api/notes-generator/status?jobId=${jobId}`);
-            const data = await res.json();
+        // 4. Set up the event listeners for updates
+        eventSourceRef.current.addEventListener('update', (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                setJobStatus(data);
 
-            if (data.status === "completed") {
-                clearInterval(pollInterval);
-                setGeneratedNotes(data.data.notes);
-                setIsLoading(false);
-                setIsPolling(false);
-            } else if (data.status === "failed") {
-                clearInterval(pollInterval);
-                alert("Failed to generate notes. Please try a different topic.");
-                setIsLoading(false);
-                setIsPolling(false);
+                if (data.status === "completed") {
+                    // Job finished successfully
+                    setGeneratedNotes(data.details.result.notes);
+                    setIsLoading(false);
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                } else if (data.status === "failed") {
+                    // Job failed
+                    alert(`Failed to generate notes: ${data.details.error || 'Unknown error.'}`);
+                    setIsLoading(false);
+                    eventSourceRef.current.close();
+                    eventSourceRef.current = null;
+                }
+            } catch (err) {
+                console.error("Failed to parse SSE message:", err);
             }
-        }, 3000); // Polling every 3 seconds
+        });
+
+        eventSourceRef.current.onerror = (err) => {
+            console.error("SSE Connection Error:", err);
+            // Close connection and revert UI to input state if an error occurs
+            if (eventSourceRef.current) {
+                eventSourceRef.current.close();
+                eventSourceRef.current = null;
+            }
+            if (isLoading) {
+                alert("The connection to the server was lost. Please try again.");
+                setIsLoading(false);
+            }
+        };
     };
 
 
@@ -113,6 +171,10 @@ export default function NotesGeneratorPage() {
         }
     };
 
+    // Determine the loading status messages based on the latest SSE update
+    const isPending = isLoading && (!jobStatus || jobStatus.status === 'pending' || jobStatus.status === 'started');
+    const isGenerating = isLoading && jobStatus && jobStatus.status !== 'pending' && jobStatus.status !== 'started' && jobStatus.status !== 'completed' && jobStatus.status !== 'failed';
+
     return (
         <main className="w-full min-h-screen bg-blue-200 p-4 sm:p-6 lg:p-8 text-black">
             <div className="max-w-4xl mx-auto">
@@ -138,6 +200,7 @@ export default function NotesGeneratorPage() {
                                         onChange={(e) => setSubject(e.target.value)}
                                         placeholder="e.g., Science, History, Mathematics"
                                         className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -153,6 +216,7 @@ export default function NotesGeneratorPage() {
                                         onChange={(e) => setTopic(e.target.value)}
                                         placeholder="e.g., Photosynthesis, The Mughal Empire"
                                         className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                        required
                                     />
                                 </div>
                             </div>
@@ -167,17 +231,22 @@ export default function NotesGeneratorPage() {
                         </form>
                     )}
 
-                    {/* Loading State */}
+                    {/* Loading State - Now using JobStatus from SSE */}
                     {isLoading && (
                         <div className="flex flex-col items-center justify-center gap-6 py-12">
                             <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-                            <p className="text-xl font-semibold text-gray-600">Generating your notes... Please wait.</p>
+                            {isPending && <p className="text-xl font-semibold text-gray-600">Job queued. Waiting for a worker to start...</p>}
 
-                            {/* Detailed Polling Status with time estimate */}
-                            {isPolling && (
+                            {/* Detailed Real-Time Status */}
+                            {(isPending || isGenerating) && jobStatus && (
                                 <>
                                     <div className="w-full h-px bg-gray-200 my-4" />
-                                    <PollingStatus />
+                                    <PollingStatus
+                                        status={jobStatus.status}
+                                        progress={jobStatus.progress}
+                                        currentSubtopic={jobStatus.details?.currentSubtopic}
+                                        totalSubtopics={jobStatus.details?.total}
+                                    />
                                 </>
                             )}
                         </div>
