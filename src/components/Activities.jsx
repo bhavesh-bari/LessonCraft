@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import {
+    FiDownload,
+    FiLoader,
     UsersRound,
     Book,
     Target,
@@ -31,6 +33,7 @@ export default function ClassActivityGeneratorPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [activities, setActivities] = useState([]);
     const [openDetails, setOpenDetails] = useState(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const handleGenerateActivities = async (e) => {
         e.preventDefault();
@@ -54,10 +57,12 @@ export default function ClassActivityGeneratorPage() {
             alert("Failed to generate activities. Please try again.");
         } finally {
             setIsLoading(false);
+
         }
     };
 
     const handleDownloadPDF = async (activity) => {
+        setIsDownloading(true);
         try {
             const response = await fetch('/api/pdf/generate-activity-pdf', {
                 method: 'POST',
@@ -77,6 +82,8 @@ export default function ClassActivityGeneratorPage() {
         } catch (error) {
             console.error("Download error:", error);
             alert("Failed to download PDF. Please try again.");
+        } finally {
+            setIsDownloading(false);
         }
     };
 
@@ -165,8 +172,10 @@ export default function ClassActivityGeneratorPage() {
                                 </div>
                             </div>
                             <div className="mt-4 flex gap-3">
-                                <button onClick={() => handleDownloadPDF(activity)} className="flex items-center gap-2 bg-gray-700 text-white py-1.5 px-3 rounded-lg hover:bg-gray-800 text-sm">
-                                    <Download size={16} />
+                                <button onClick={() => handleDownloadPDF(activity)} className="flex items-center gap-2 bg-gray-700 text-white py-1.5 px-3 rounded-lg hover:bg-gray-800 text-sm" disabled={isDownloading}
+                                >
+                                    {isDownloading ? <FiLoader className="animate-spin" /> : <FiDownload />}
+                                    <span>{isDownloading ? 'Preparing PDF...' : 'Download PDF'}</span>
                                 </button>
                                 <button onClick={() => setOpenDetails(activity)} className="bg-blue-500 text-white py-1.5 px-3 rounded-lg hover:bg-blue-600 text-sm">
                                     Details

@@ -277,27 +277,27 @@ export default function LessonPlanGeneratorPage() {
                                         {
                                             icon: <UsersRound className="w-6 h-6 text-pink-600 flex-shrink-0" />,
                                             label: "Interactive Class Activity",
-                                            href: "https://lessoncraft-ai/tools/activities.com",
+                                            href: "https://lesson-craft-teach.vercel.app/activities",
                                         },
                                         {
                                             icon: <PencilRuler className="w-6 h-6 text-green-600 flex-shrink-0" />,
                                             label: "Quiz Maker Challenge",
-                                            href: "https://lessoncraft-ai/tools/quiz-maker.com",
+                                            href: "https://lesson-craft-teach.vercel.app/quiz-maker",
                                         },
                                         {
                                             icon: <FileText className="w-6 h-6 text-red-600 flex-shrink-0" />,
                                             label: "Surprise Test",
-                                            href: "https://lessoncraft-ai/tools/exam-generator.com",
+                                            href: "https://lesson-craft-teach.vercel.app/exam-generator",
                                         },
                                         {
                                             icon: <BotMessageSquare className="w-6 h-6 text-purple-600 flex-shrink-0" />,
                                             label: "Doubt Solving",
-                                            href: "https://lessoncraft-ai/tools/summarizer.com",
+                                            href: "https://lesson-craft-teach.vercel.app/summarizer",
                                         },
                                         {
                                             icon: <BookText className="w-6 h-6 text-blue-600 flex-shrink-0" />,
                                             label: "Notes & PPT",
-                                            href: "https://lessoncraft-ai/tools/notes-generator.com",
+                                            href: "https://lesson-craft-teach.vercel.app/notes-generator",
                                         },
                                     ].map((ref, idx) => (
                                         <li

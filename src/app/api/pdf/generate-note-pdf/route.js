@@ -1,6 +1,6 @@
 // src/app/api/notes-generator-pdf/route.js
-// import puppeteer from 'puppeteer';
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
+// import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
 import { NextResponse } from 'next/server';
 import { marked } from 'marked';
@@ -100,26 +100,26 @@ export async function POST(req) {
       </html>
     `;
 
-    // const isLocal = !process.env.VERCEL;
+    const isLocal = !process.env.VERCEL;
 
-    // // const browser = await puppeteer.launch(
-    // //   isLocal
-    // //     ? { headless: true } // uses local Puppeteer Chromium
-    // //     : {
-    // //       args: chromium.args,
-    // //       executablePath: await chromium.executablePath(),
-    // //       headless: chromium.headless,
-    // //     }
-    // // );
-    const browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath:
-        process.env.AWS_REGION || process.env.VERCEL
-          ? await chromium.executablePath()
-          : undefined,
-      headless: chromium.headless,
-    });
+    const browser = await puppeteer.launch(
+      isLocal
+        ? { headless: true } // uses local Puppeteer Chromium
+        : {
+          args: chromium.args,
+          executablePath: await chromium.executablePath(),
+          headless: chromium.headless,
+        }
+    );
+    // const browser = await puppeteer.launch({
+    //   args: chromium.args,
+    //   defaultViewport: chromium.defaultViewport,
+    //   executablePath:
+    //     process.env.AWS_REGION || process.env.VERCEL
+    //       ? await chromium.executablePath()
+    //       : undefined,
+    //   headless: chromium.headless,
+    // });
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
 
